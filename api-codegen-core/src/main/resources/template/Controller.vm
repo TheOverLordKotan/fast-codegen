@@ -1,0 +1,89 @@
+## 包名
+package ${config.basePackage}.${config.controllerPackageName};
+
+## import 依赖
+#foreach($import in $controllerMeta.dtoImports)
+import $import;
+#end
+import ${config.basePackage}.${config.dtoPackageName}.*;
+import ${config.basePackage}.${config.servicePackageName}.${controllerMeta.serviceName};
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.stereotype.Controller;
+import java.util.List;
+
+/**
+ * @ClassName ${controllerMeta.name}
+ * @Description ${controllerMeta.description}
+ * @Author $controllerMeta.author
+ **/
+@Controller
+@RequestMapping("${controllerMeta.basePath}")
+@Validated
+public class ${controllerMeta.name} {
+
+    private final ${controllerMeta.serviceName} service;
+
+    public ${controllerMeta.name}(${controllerMeta.serviceName} service) {
+        this.service = service;
+    }
+#if($controllerMeta.handlerMethodMetas)
+#foreach($handlerMethodMeta in $controllerMeta.handlerMethodMetas)
+
+    /**
+     * <pre>
+     * $handlerMethodMeta.summary
+     * </pre>
+     * $handlerMethodMeta.description
+    ## 如果返回类型不为void，则需要增加描述
+#if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid()) *
+     * @return ${handlerMethodMeta.handlerMethodReturnMeta.description}
+     */
+#else
+ */
+#end
+#if($handlerMethodMeta.enableResponseBody())
+    @ResponseBody
+#end
+    @RequestMapping(value = "$handlerMethodMeta.url",
+            method = RequestMethod.$handlerMethodMeta.requestType,
+            produces = {#foreach($produce in $handlerMethodMeta.produces)"$produce"#if($velocityCount<$handlerMethodMeta.produces.size()),#end#end},
+            consumes = {#foreach($consume in $handlerMethodMeta.consumes)"$consume"#if($velocityCount<$handlerMethodMeta.consumes.size()),#end#end})
+    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(
+#if($handlerMethodMeta.handlerMethodParamMetas)
+#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
+#if($handlerMethodParamMeta.tag == 3)##路径参数
+            @PathVariable("$handlerMethodParamMeta.name") $handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#elseif($handlerMethodParamMeta.tag == 2)##请求体参数
+            @Validated #if($velocityCount<$handlerMethodMeta.enableRequestBody())@RequestBody #end$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#elseif($handlerMethodParamMeta.tag == 1)##查询参数
+            @Validated $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#end#end#end) {
+       #if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid()) return#end service.${handlerMethodMeta.methodName}(
+#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
+#if($handlerMethodParamMeta.tag == 3)##路径参数
+                $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#elseif($handlerMethodParamMeta.tag == 2)##请求体参数
+                ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#elseif($handlerMethodParamMeta.tag == 1)##查询参数
+                ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end#end#end
+
+        );
+    }
+#end
+#end
+
+
+}

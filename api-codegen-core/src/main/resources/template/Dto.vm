@@ -1,0 +1,35 @@
+package ${config.basePackage}.dtos;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import lombok.Data;
+import java.util.List;
+import java.util.Date;
+import javax.validation.Valid;
+
+/**
+ * @ClassName ${definitionMeta.name}
+ * @Description ${definitionMeta.description}
+ * @Author ${definitionMeta.author}
+ **/
+@Data
+@JsonInclude(Include.NON_NULL)
+public class ${definitionMeta.name} {
+
+#foreach($property in $definitionMeta.properties)
+
+    /**
+     * ${property.description}
+     */
+#if($property.required)
+    @NotNull
+#end
+#if($property.requiredValid())
+    @Valid
+#end
+    private ${property.type} ${property.name}$property.value();
+#end
+
+}

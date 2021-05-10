@@ -1,0 +1,54 @@
+## 包名
+package ${config.basePackage}.${config.servicePackageName};
+
+## import 依赖
+#foreach($import in $controllerMeta.dtoImports)
+import $import;
+#end
+import ${config.basePackage}.${config.dtoPackageName}.*;
+import java.util.List;
+
+/**
+ * @InterfaceName ${controllerMeta.serviceName}
+ * @Author $controllerMeta.author
+ **/
+public interface ${controllerMeta.serviceName} {
+
+#if($controllerMeta.handlerMethodMetas)
+#foreach($handlerMethodMeta in $controllerMeta.handlerMethodMetas)
+
+    /**
+     * <pre>
+     * $handlerMethodMeta.summary
+     * </pre>
+     * $handlerMethodMeta.description
+    ## 如果返回类型不为void，则需要增加描述
+#if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid())
+ *
+     * @return ${handlerMethodMeta.handlerMethodReturnMeta.description}
+     */
+#else
+ */
+#end
+    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(
+#if($handlerMethodMeta.handlerMethodParamMetas)
+#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
+#if($handlerMethodParamMeta.tag == 3)##路径参数
+            $handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#elseif($handlerMethodParamMeta.tag == 2)##请求体参数
+            $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#elseif($handlerMethodParamMeta.tag == 1)##查询参数
+            $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#end
+#end
+#end
+#end
+
+    );
+#end
+#end
+
+
+}

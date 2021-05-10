@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.zengsx</groupId>
+    <artifactId>lighthouse-configs</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.zengsx</groupId>
+                <artifactId>maven-plugin-sql-codegen</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <configuration>
+                    <!--                    注释了的配置都代表不是必须的-->
+                    <config>
+                        <!--                        <dbName>数据库类型（用于决定解析sql的方式），默认为: mysql</dbName>-->
+                        <!--                        <ormName>持久化层类型（用于决定生成哪类实体），默认为: mybatis-plus</ormName>-->
+                        <!--                        默认会在项目下找 resources/db/TableSchema.sql-->
+                        <!--                        <sqlFilePath>/xx/xx/xxx.sql</sqlFilePath>-->
+
+                        <!--                        默认为项目的 src/java/main,最后生成的entity文件则在 src/java/main/${basePackage}/entities/下 -->
+                        <!--                        <srcJavaPath>/xx/yy/zz</srcJavaPath>-->
+                        <!-- 指向灯塔项目 src/main/java-->
+                        <!--                        <srcJavaPath>-->
+                        <!--                            /Users/didi/company-code/lighthouse/central-server/core/src/main/java-->
+                        <!--                        </srcJavaPath>-->
+                        <basePackage>com.xiaojukeji.dichat.lighthouse</basePackage>
+                        <!--                        <entityPackageName>实体包名,默认为 entities </entityPackageName>-->
+                        <!--                        <entitySuffix>实体class名称后缀,默认为 DO</entitySuffix>-->
+                        <mybatisPlusConfig>
+                            <!--                            <logicDelColumnName>逻辑删除字段，默认为 del</logicDelColumnName>-->
+                            <!--                            需要生成自动填充配置的字段    @TableField(value = "xxx", fill = FieldFill.INSERT)-->
+                            <autoInsertFields>
+                                <param>created_at</param>
+                            </autoInsertFields>
+                            <!--                            需要生成自动填充配置的字段    @TableField(value = "xxx", fill = FieldFill.UPDATE)-->
+                            <autoUpdateFields>
+                                <param>updated_at</param>
+                            </autoUpdateFields>
+                            <!--                            需要生成自动填充配置的字段    @TableField(value = "xxx", fill = FieldFill.INSERT_UPDATE)-->
+                            <autoInsertOrUpdateFields>
+
+                            </autoInsertOrUpdateFields>
+                            <!--                            下列功能目前不打算支持，考虑到文件覆盖的问题: mapper.xml和mapperInterface.java都是可能会有自定义的select方法，容易引起安全事故。。-->
+                            <!--                            <enableOutputMapper>是否开启生成mapperInterface.java mapper.xml,默认 false</enableOutputMapper>-->
+                            <!--                            <mapperInterfacePackage>mapper接口生成的包名,默认mappers</mapperInterfacePackage>-->
+                            <!--                            <mapperXmlDirName>mapper.xml生成的目录名（相对于resources）,默认为 mapper</mapperXmlDirName>-->
+                        </mybatisPlusConfig>
+                    </config>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>SqlToEntityConvertor</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
