@@ -1,5 +1,6 @@
 package com.zengsx.easycode.apicodegen;
 
+import com.zengsx.easycode.apicodegen.config.GlobalConfig;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.zengsx.easycode.codegen.utils;
+package com.zengsx.easycode.common.utils;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

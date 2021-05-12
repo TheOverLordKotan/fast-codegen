@@ -1,6 +1,6 @@
 package com.zengsx.easycode.sqlcodegen;
 
-import com.zengsx.easycode.codegen.utils.EnumUtils;
+import com.zengsx.easycode.common.utils.EnumUtils;
 import com.zengsx.easycode.sqlcodegen.config.GlobalConfig;
 import com.zengsx.easycode.sqlcodegen.core.meta2entity.IMetaToOrmProcessor;
 import com.zengsx.easycode.sqlcodegen.core.sql2meta.ISqlToMetaProcessor;

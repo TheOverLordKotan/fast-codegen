@@ -1,6 +1,6 @@
 package com.zengsx.easycode.sqlcodegen.core.meta2entity.impl;
 
-import com.zengsx.easycode.codegen.utils.VelocityUtils;
+import com.zengsx.easycode.common.utils.VelocityUtils;
 import com.zengsx.easycode.sqlcodegen.config.GlobalConfig;
 import com.zengsx.easycode.sqlcodegen.config.MybatisPlusConfig;
 import com.zengsx.easycode.sqlcodegen.config.MybatisPlusConfig.LogicDeleteColumn;

@@ -4,7 +4,7 @@ import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLDataTypeImpl;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
-import com.zengsx.easycode.codegen.utils.FormatUtils;
+import com.zengsx.easycode.common.utils.FormatUtils;
 import com.zengsx.easycode.sqlcodegen.config.GlobalConfig;
 import com.zengsx.easycode.sqlcodegen.core.sql2meta.ISqlToMetaProcessor;
 import com.zengsx.easycode.sqlcodegen.core.sql2meta.context.MysqlContext;
@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.util.StringUtils;
 
 /**
  * @ClassName: SqlToMetaProcessorMysqlImpl

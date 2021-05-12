@@ -17,14 +17,14 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <druid.spring.boot.starter.version>1.2.5</druid.spring.boot.starter.version>
-        <codegen.utils.version>1.0-SNAPSHOT</codegen.utils.version>
+        <common.utils.version>1.0-SNAPSHOT</common.utils.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.zengsx.easycode</groupId>
-            <artifactId>codegen-utils</artifactId>
-            <version>${codegen.utils.version}</version>
+            <artifactId>common-utils</artifactId>
+            <version>${common.utils.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

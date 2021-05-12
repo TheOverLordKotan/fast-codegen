@@ -1,4 +1,4 @@
-package com.zengsx.easycode.apicodegen;
+package com.zengsx.easycode.apicodegen.config;
 
 import java.io.File;
 import java.util.Optional;

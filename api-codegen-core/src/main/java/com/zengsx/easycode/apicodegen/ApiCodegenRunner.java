@@ -1,8 +1,9 @@
 package com.zengsx.easycode.apicodegen;
 
 
-import static com.zengsx.easycode.codegen.utils.VelocityUtils.render;
+import static com.zengsx.easycode.common.utils.VelocityUtils.render;
 
+import com.zengsx.easycode.apicodegen.config.GlobalConfig;
 import com.zengsx.easycode.apicodegen.meta.DtoMeta;
 import com.zengsx.easycode.apicodegen.meta.ApiMetaResolveResult;
 import com.zengsx.easycode.apicodegen.resolver.impl.SwaggerApiMetaResolver;

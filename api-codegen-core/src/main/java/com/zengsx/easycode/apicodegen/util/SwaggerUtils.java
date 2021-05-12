@@ -1,8 +1,8 @@
 package com.zengsx.easycode.apicodegen.util;
 
 import com.zengsx.easycode.apicodegen.constants.SwaggerConstants;
-import com.zengsx.easycode.codegen.utils.ClassUtils;
-import com.zengsx.easycode.codegen.utils.FormatUtils;
+import com.zengsx.easycode.common.utils.ClassUtils;
+import com.zengsx.easycode.common.utils.FormatUtils;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
 import io.swagger.parser.SwaggerParser;

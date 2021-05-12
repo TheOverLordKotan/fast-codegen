@@ -1,7 +1,7 @@
 package com.zengsx.easycode.mavenplugin.apicodegen;
 
 import com.zengsx.easycode.apicodegen.ApiCodegenRunner;
-import com.zengsx.easycode.apicodegen.GlobalConfig;
+import com.zengsx.easycode.apicodegen.config.GlobalConfig;
 import java.io.File;
 import java.util.Optional;
 import lombok.SneakyThrows;
