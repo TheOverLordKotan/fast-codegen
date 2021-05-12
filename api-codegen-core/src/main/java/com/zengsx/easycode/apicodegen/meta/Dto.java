@@ -13,7 +13,7 @@ import org.springframework.util.ObjectUtils;
  * @Date: 2021-04-23 17:35
  */
 @Data
-public class DtoMeta {
+public class Dto {
 
     /**
      * 定义的名称

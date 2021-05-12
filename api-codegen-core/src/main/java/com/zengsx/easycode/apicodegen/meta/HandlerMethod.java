@@ -10,7 +10,7 @@ import lombok.Data;
  * @Date: 2021-04-19 15:15
  */
 @Data
-public class HandlerMethodMeta {
+public class HandlerMethod {
 
     /**
      * 请求类型  GET POST PUT PATCH DELETE
@@ -45,12 +45,12 @@ public class HandlerMethodMeta {
     /**
      * 方法参数
      */
-    List<HandlerMethodParamMeta> handlerMethodParamMetas;
+    List<HandlerMethodParam> handlerMethodParams;
 
     /**
      * 返回数据类型
      */
-    private HandlerMethodReturnMeta handlerMethodReturnMeta;
+    private HandlerMethodReturn handlerMethodReturn;
 
     /**
      * @return 是否开启json序列化

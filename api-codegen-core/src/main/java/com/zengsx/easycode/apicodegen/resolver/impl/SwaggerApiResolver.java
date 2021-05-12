@@ -1,15 +1,15 @@
 package com.zengsx.easycode.apicodegen.resolver.impl;
 
-import com.zengsx.easycode.apicodegen.constants.ParamTag;
+import com.zengsx.easycode.apicodegen.constants.HandlerMethodParamTag;
 import com.zengsx.easycode.apicodegen.constants.SwaggerConstants;
-import com.zengsx.easycode.apicodegen.meta.ControllerMeta;
-import com.zengsx.easycode.apicodegen.meta.DtoMeta;
-import com.zengsx.easycode.apicodegen.meta.DtoMeta.DtoFieldMeta;
-import com.zengsx.easycode.apicodegen.meta.HandlerMethodMeta;
-import com.zengsx.easycode.apicodegen.meta.HandlerMethodParamMeta;
-import com.zengsx.easycode.apicodegen.meta.HandlerMethodReturnMeta;
-import com.zengsx.easycode.apicodegen.meta.ApiMetaResolveResult;
-import com.zengsx.easycode.apicodegen.resolver.IApiMetaResolver;
+import com.zengsx.easycode.apicodegen.meta.ApiResolveResult;
+import com.zengsx.easycode.apicodegen.meta.Controller;
+import com.zengsx.easycode.apicodegen.meta.Dto;
+import com.zengsx.easycode.apicodegen.meta.Dto.DtoFieldMeta;
+import com.zengsx.easycode.apicodegen.meta.HandlerMethod;
+import com.zengsx.easycode.apicodegen.meta.HandlerMethodParam;
+import com.zengsx.easycode.apicodegen.meta.HandlerMethodReturn;
+import com.zengsx.easycode.apicodegen.resolver.IApiResolver;
 import com.zengsx.easycode.apicodegen.util.SwaggerUtils;
 import io.swagger.models.ArrayModel;
 import io.swagger.models.Contact;
@@ -49,14 +49,14 @@ import org.springframework.util.CollectionUtils;
  * @Date: 2021-04-21 20:00
  */
 @Slf4j
-public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
+public class SwaggerApiResolver implements IApiResolver<Swagger> {
 
     @Override
-    public ApiMetaResolveResult resolve(Swagger swagger) {
+    public ApiResolveResult resolve(Swagger swagger) {
         // 解析需要生成的dto对象
-        List<DtoMeta> dtoMetas = getDefinitionMetas(swagger);
+        List<Dto> dtos = getDefinitions(swagger);
         // 需要生成的controller对象
-        Map<String, ControllerMeta> controllerMetaMap = getControllerMetaMap(swagger);
+        Map<String, Controller> controllerMetaMap = getControllerMap(swagger);
         // request mapping 解析
         swagger.getPaths().forEach((url, path) -> {
             // 处理 每个path，每个path包含 get post delete patch put
@@ -76,9 +76,9 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
             path.getOperationMap().forEach((opType, op) -> {
                 log.info("当前正在处理url:{},type:{}", url, opType.name());
                 // 获取对应的controllerMeta
-                ControllerMeta controllerMeta = controllerMetaMap.get(op.getTags().get(0));
+                Controller controller = controllerMetaMap.get(op.getTags().get(0));
                 // 定义当前请求
-                HandlerMethodMeta hMethodMeta = new HandlerMethodMeta();
+                HandlerMethod hMethodMeta = new HandlerMethod();
                 hMethodMeta.setUrl(url);
                 // request mapping  http method
                 hMethodMeta.setRequestType(opType.name());
@@ -89,39 +89,35 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
                 // request mapping description
                 hMethodMeta.setDescription(op.getDescription());
                 // 处理 consumes produces ，包括默认的
-                hMethodMeta.setConsumes(Optional.ofNullable(op.getConsumes()).orElse(controllerMeta.getConsumes()));
-                hMethodMeta.setProduces(Optional.ofNullable(op.getProduces()).orElse(controllerMeta.getProduces()));
+                hMethodMeta.setConsumes(Optional.ofNullable(op.getConsumes()).orElse(controller.getConsumes()));
+                hMethodMeta.setProduces(Optional.ofNullable(op.getProduces()).orElse(controller.getProduces()));
 
                 // parse handlerMethod params
-                List<HandlerMethodParamMeta> handlerMethodParamMetaParams = getHandlerMethodParamMetas(
+                List<HandlerMethodParam> handlerMethodParamMetaParams = getHandlerMethodParams(
                         op.getOperationId(),
                         op.getParameters(),
-                        dtoMetas);
+                        dtos);
 
                 // setting handlerMethod params
-                hMethodMeta.setHandlerMethodParamMetas(handlerMethodParamMetaParams);
+                hMethodMeta.setHandlerMethodParams(handlerMethodParamMetaParams);
                 // setting handlerMethod return def
-                hMethodMeta.setHandlerMethodReturnMeta(getHandlerMethodReturnMeta(op));
+                hMethodMeta.setHandlerMethodReturn(getHandlerMethodReturn(op));
                 // 收集 handlerMethod
-                controllerMeta.getHandlerMethodMetas().add(hMethodMeta);
+                controller.getHandlerMethods().add(hMethodMeta);
             });
 
         });
-        ApiMetaResolveResult resolverApiMetaResolveResult = new ApiMetaResolveResult();
-        resolverApiMetaResolveResult.setControllerMetas(new ArrayList<>(controllerMetaMap.values()));
-        resolverApiMetaResolveResult.setDtoMetas(dtoMetas);
+        ApiResolveResult resolveResult = new ApiResolveResult();
+        resolveResult.setControllers(new ArrayList<>(controllerMetaMap.values()));
+        resolveResult.setDtos(dtos);
         // 代码所属者
         String author = Optional.ofNullable(swagger.getInfo())
                 .map(Info::getContact)
                 .map(Contact::getName)
                 .orElse("codegen");
-        resolverApiMetaResolveResult.getDtoMetas().forEach(dtoMeta -> {
-            dtoMeta.setAuthor(author);
-        });
-        resolverApiMetaResolveResult.getControllerMetas().forEach(controllerMeta -> {
-            controllerMeta.setAuthor(author);
-        });
-        return resolverApiMetaResolveResult;
+        resolveResult.getDtos().forEach(dto -> dto.setAuthor(author));
+        resolveResult.getControllers().forEach(controller -> controller.setAuthor(author));
+        return resolveResult;
     }
 
     /**
@@ -130,18 +126,18 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
      * @param swagger swagger文档对象
      * @return 解析出来的dto定义
      */
-    public List<DtoMeta> getDefinitionMetas(Swagger swagger) {
-        List<DtoMeta> dtoMetas = new ArrayList<>(16);
+    private List<Dto> getDefinitions(Swagger swagger) {
+        List<Dto> dtos = new ArrayList<>(16);
         // 定义的公共 dto
         swagger.getDefinitions().forEach((definitionName, model) -> {
             ModelImpl modelImpl = (ModelImpl) model;
             if (!SwaggerConstants.TYPE_OBJECT.equals(modelImpl.getType())) {
                 throw new RuntimeException("definition只处理 type=object 的定义");
             }
-            DtoMeta dtoMeta = new DtoMeta();
-            dtoMeta.setName(SwaggerUtils.getClassNameFromDefinitionName(definitionName));
-            dtoMeta.setDescription(modelImpl.getDescription());
-            dtoMeta.setProperties(
+            Dto dto = new Dto();
+            dto.setName(SwaggerUtils.getClassNameFromDefinitionName(definitionName));
+            dto.setDescription(modelImpl.getDescription());
+            dto.setProperties(
                     modelImpl.getProperties().entrySet().stream()
                             .map(entry -> {
                                 Property property = entry.getValue();
@@ -189,9 +185,9 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
                             })
                             .collect(Collectors.toList())
             );
-            dtoMetas.add(dtoMeta);
+            dtos.add(dto);
         });
-        return dtoMetas;
+        return dtos;
     }
 
     /**
@@ -200,20 +196,20 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
      * @param swagger swagger文档对象
      * @return controller定义
      */
-    public Map<String, ControllerMeta> getControllerMetaMap(Swagger swagger) {
-        Map<String, ControllerMeta> controllerMetaMap = new HashMap<>(swagger.getTags().size());
+    private Map<String, Controller> getControllerMap(Swagger swagger) {
+        Map<String, Controller> controllerMetaMap = new HashMap<>(swagger.getTags().size());
 
         // controller定义
         swagger.getTags().forEach(tag -> {
-            ControllerMeta controllerMeta = new ControllerMeta();
-            controllerMeta.setName(SwaggerUtils.wrapControllerClassName(tag.getName()));
-            controllerMeta.setServiceName(SwaggerUtils.wrapControllerServiceClassName(tag.getName()));
-            controllerMeta.setDescription(tag.getDescription());
-            controllerMeta.setBasePath(swagger.getBasePath());
-            controllerMeta.setConsumes(Optional.ofNullable(swagger.getConsumes()).orElse(Collections.emptyList()));
-            controllerMeta.setProduces(Optional.ofNullable(swagger.getProduces()).orElse(Collections.emptyList()));
-            controllerMeta.setHandlerMethodMetas(new ArrayList<>(16));
-            controllerMetaMap.put(tag.getName(), controllerMeta);
+            Controller controller = new Controller();
+            controller.setName(SwaggerUtils.wrapControllerClassName(tag.getName()));
+            controller.setServiceName(SwaggerUtils.wrapControllerServiceClassName(tag.getName()));
+            controller.setDescription(tag.getDescription());
+            controller.setBasePath(swagger.getBasePath());
+            controller.setConsumes(Optional.ofNullable(swagger.getConsumes()).orElse(Collections.emptyList()));
+            controller.setProduces(Optional.ofNullable(swagger.getProduces()).orElse(Collections.emptyList()));
+            controller.setHandlerMethods(new ArrayList<>(16));
+            controllerMetaMap.put(tag.getName(), controller);
         });
         return controllerMetaMap;
     }
@@ -225,26 +221,23 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
      * @param params 当前op参数
      * @return 方法参数列表
      */
-    private List<HandlerMethodParamMeta> getHandlerMethodParamMetas(
-            String opName,
-            List<Parameter> params,
-            List<DtoMeta> dtoMetas) {
+    private List<HandlerMethodParam> getHandlerMethodParams(String opName, List<Parameter> params, List<Dto> dtos) {
         // 所有参数分三类，path直接存放，query参数合并生成对象，body参数也直接存放
         List<Parameter> parameters = Optional.ofNullable(params).orElse(Collections.emptyList());
-        List<HandlerMethodParamMeta> handlerMethodParamMetas = parameters.stream()
+        List<HandlerMethodParam> handlerMethodParams = parameters.stream()
                 .filter(o -> !(o instanceof QueryParameter))
                 .map(parameter -> {
-                    HandlerMethodParamMeta handlerMethodParamMeta = new HandlerMethodParamMeta();
-                    handlerMethodParamMeta.setName(parameter.getName());
-                    handlerMethodParamMeta.setDescription(parameter.getDescription());
-                    handlerMethodParamMeta.setRequired(parameter.getRequired());
+                    HandlerMethodParam handlerMethodParam = new HandlerMethodParam();
+                    handlerMethodParam.setName(parameter.getName());
+                    handlerMethodParam.setDescription(parameter.getDescription());
+                    handlerMethodParam.setRequired(parameter.getRequired());
                     if (parameter instanceof PathParameter) {
                         PathParameter pathParameter = (PathParameter) parameter;
                         // 只支持基本类型，直接获取type就行
-                        handlerMethodParamMeta.setType(
+                        handlerMethodParam.setType(
                                 SwaggerUtils.swaggerTypeToJavaType(pathParameter.getType(), pathParameter.getFormat())
                         );
-                        handlerMethodParamMeta.setTag(ParamTag.PATH);
+                        handlerMethodParam.setTag(HandlerMethodParamTag.PATH);
                     } else if (parameter instanceof BodyParameter) {
                         BodyParameter bodyParameter = ((BodyParameter) parameter);
                         String typeName = Optional.ofNullable(bodyParameter.getSchema())
@@ -252,12 +245,12 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
                                 // ref 转换 className
                                 .map(SwaggerUtils::getClassNameFromRefPath)
                                 .orElseThrow(() -> new RuntimeException("body类型参数只支持ref引用"));
-                        handlerMethodParamMeta.setType(typeName);
-                        handlerMethodParamMeta.setTag(ParamTag.BODY);
+                        handlerMethodParam.setType(typeName);
+                        handlerMethodParam.setTag(HandlerMethodParamTag.BODY);
                     } else {
                         throw new RuntimeException("目前只能处理 query path body 三类参数");
                     }
-                    return handlerMethodParamMeta;
+                    return handlerMethodParam;
                 }).collect(Collectors.toList());
 
         List<QueryParameter> queryParameters = parameters.stream()
@@ -266,19 +259,19 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
                 .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(queryParameters)) {
 
-            HandlerMethodParamMeta handlerMethodParamMeta = new HandlerMethodParamMeta();
-            handlerMethodParamMeta.setTag(ParamTag.QUERY);
-            handlerMethodParamMeta.setName("queryParams");
-            handlerMethodParamMeta.setDescription("query参数,详情参考dto定义");
-            handlerMethodParamMeta.setType(SwaggerUtils.getClassNameFromHandlerMethodName(opName));
+            HandlerMethodParam handlerMethodParam = new HandlerMethodParam();
+            handlerMethodParam.setTag(HandlerMethodParamTag.QUERY);
+            handlerMethodParam.setName("queryParams");
+            handlerMethodParam.setDescription("query参数,详情参考dto定义");
+            handlerMethodParam.setType(SwaggerUtils.getClassNameFromHandlerMethodName(opName));
 
             // 追加到definition定义列表中
-            handlerMethodParamMetas.add(handlerMethodParamMeta);
+            handlerMethodParams.add(handlerMethodParam);
 
-            DtoMeta dtoMeta = new DtoMeta();
-            dtoMeta.setName(SwaggerUtils.getClassNameFromHandlerMethodName(opName));
-            dtoMeta.setDescription(opName + "方法查询参数");
-            dtoMeta.setProperties(queryParameters.stream()
+            Dto dto = new Dto();
+            dto.setName(SwaggerUtils.getClassNameFromHandlerMethodName(opName));
+            dto.setDescription(opName + "方法查询参数");
+            dto.setProperties(queryParameters.stream()
                     .map(o -> {
                         DtoFieldMeta dtoFieldMeta = new DtoFieldMeta();
                         dtoFieldMeta.setRequired(o.getRequired());
@@ -306,9 +299,9 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
                         return dtoFieldMeta;
                     }).collect(Collectors.toList()));
 
-            dtoMetas.add(dtoMeta);
+            dtos.add(dto);
         }
-        return handlerMethodParamMetas;
+        return handlerMethodParams;
     }
 
     /**
@@ -317,23 +310,23 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
      * @param op 请求方法定义
      * @return return对象
      */
-    private HandlerMethodReturnMeta getHandlerMethodReturnMeta(Operation op) {
+    private HandlerMethodReturn getHandlerMethodReturn(Operation op) {
         Response resp = op.getResponses().values()
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("接口定义需要有一个唯一的返回声明!"));
-        HandlerMethodReturnMeta handlerMethodReturnMeta = new HandlerMethodReturnMeta();
+        HandlerMethodReturn handlerMethodReturn = new HandlerMethodReturn();
         Model model = resp.getResponseSchema();
         if (null == model) {
-            handlerMethodReturnMeta.setType("void");
+            handlerMethodReturn.setType("void");
         } else if (model instanceof ModelImpl) {
             // 基础类型
             ModelImpl modelImpl = (ModelImpl) model;
-            handlerMethodReturnMeta
+            handlerMethodReturn
                     .setType(SwaggerUtils.swaggerTypeToJavaType(modelImpl.getType(), modelImpl.getFormat()));
         } else if (model instanceof RefModel) {
             RefModel refModel = (RefModel) model;
-            handlerMethodReturnMeta.setType(SwaggerUtils.getClassNameFromRefPath(refModel.getOriginalRef()));
+            handlerMethodReturn.setType(SwaggerUtils.getClassNameFromRefPath(refModel.getOriginalRef()));
         } else if (model instanceof ArrayModel) {
             Property property = ((ArrayModel) model).getItems();
             String subType;
@@ -342,12 +335,12 @@ public class SwaggerApiMetaResolver implements IApiMetaResolver<Swagger> {
             } else {
                 subType = SwaggerUtils.swaggerTypeToJavaType(property.getType(), property.getFormat());
             }
-            handlerMethodReturnMeta.setType(String.format("List<%s>", subType));
+            handlerMethodReturn.setType(String.format("List<%s>", subType));
         } else {
             throw new RuntimeException("resp返回值只支持 $ref | type | List<$ref> |List<type> ");
         }
-        handlerMethodReturnMeta.setDescription(resp.getDescription());
-        return handlerMethodReturnMeta;
+        handlerMethodReturn.setDescription(resp.getDescription());
+        return handlerMethodReturn;
     }
 
 

@@ -6,7 +6,7 @@ package com.zengsx.easycode.apicodegen.constants;
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 10:09
  */
-public class ParamTag {
+public class HandlerMethodParamTag {
 
     /**
      * 查询参数

@@ -1,6 +1,6 @@
 package com.zengsx.easycode.apicodegen.meta;
 
-import com.zengsx.easycode.apicodegen.constants.ParamTag;
+import com.zengsx.easycode.apicodegen.constants.HandlerMethodParamTag;
 import lombok.Data;
 
 /**
@@ -10,10 +10,10 @@ import lombok.Data;
  * @Date: 2021-04-23 11:22
  */
 @Data
-public class HandlerMethodParamMeta {
+public class HandlerMethodParam {
 
     /**
-     * 分类{@link ParamTag}
+     * 分类{@link HandlerMethodParamTag}
      */
     private int tag;
 

@@ -4,9 +4,9 @@ package com.zengsx.easycode.apicodegen;
 import static com.zengsx.easycode.common.utils.VelocityUtils.render;
 
 import com.zengsx.easycode.apicodegen.config.GlobalConfig;
-import com.zengsx.easycode.apicodegen.meta.DtoMeta;
-import com.zengsx.easycode.apicodegen.meta.ApiMetaResolveResult;
-import com.zengsx.easycode.apicodegen.resolver.impl.SwaggerApiMetaResolver;
+import com.zengsx.easycode.apicodegen.meta.Dto;
+import com.zengsx.easycode.apicodegen.meta.ApiResolveResult;
+import com.zengsx.easycode.apicodegen.resolver.impl.SwaggerApiResolver;
 import com.zengsx.easycode.apicodegen.util.SwaggerUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,13 +39,13 @@ public class ApiCodegenRunner {
      */
     public void start(GlobalConfig config) {
         File[] swaggerFiles = scanSwaggerFiles(config.getApiDefineDirPath());
-        List<ApiMetaResolveResult> resolverApiMetaResolveResults = Arrays.stream(swaggerFiles)
+        List<ApiResolveResult> resolverApiResolveResults = Arrays.stream(swaggerFiles)
                 .map(this::parseSwaggerFile)
                 .collect(Collectors.toList());
         // 检查重名dto
-        checkDuplicatedNameDto(resolverApiMetaResolveResults);
+        checkDuplicatedNameDto(resolverApiResolveResults);
         // 生成文件
-        resolverApiMetaResolveResults.forEach(apiMetaResolveResult -> swaggerToFile(config, apiMetaResolveResult));
+        resolverApiResolveResults.forEach(apiResolveResult -> swaggerToFile(config, apiResolveResult));
     }
 
     /**
@@ -70,22 +70,22 @@ public class ApiCodegenRunner {
      * @return 解析结果
      */
     @SneakyThrows
-    public ApiMetaResolveResult parseSwaggerFile(File swaggerFile) {
+    public ApiResolveResult parseSwaggerFile(File swaggerFile) {
         String content = IOUtils.toString(new FileInputStream(swaggerFile), StandardCharsets.UTF_8);
-        return new SwaggerApiMetaResolver().resolve(SwaggerUtils.parseSwagger(content));
+        return new SwaggerApiResolver().resolve(SwaggerUtils.parseSwagger(content));
     }
 
 
     /**
      * 检查重名dto
      *
-     * @param resolverApiMetaResolveResults swagger parse results
+     * @param resolverApiResolveResults swagger parse results
      */
-    public void checkDuplicatedNameDto(List<ApiMetaResolveResult> resolverApiMetaResolveResults) {
+    public void checkDuplicatedNameDto(List<ApiResolveResult> resolverApiResolveResults) {
         // 检查重名dto
-        resolverApiMetaResolveResults.stream()
-                .flatMap(o -> o.getDtoMetas().stream())
-                .map(DtoMeta::getName)
+        resolverApiResolveResults.stream()
+                .flatMap(o -> o.getDtos().stream())
+                .map(Dto::getName)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
                 .filter(entry -> entry.getValue() > 1)
@@ -99,32 +99,32 @@ public class ApiCodegenRunner {
      * swagger to file
      *
      * @param config 全局配置
-     * @param apiMetaResolveResult 解析结果
+     * @param apiResolveResult 解析结果
      */
-    public void swaggerToFile(GlobalConfig config, ApiMetaResolveResult apiMetaResolveResult) {
+    public void swaggerToFile(GlobalConfig config, ApiResolveResult apiResolveResult) {
         // 生成controller文件
-        apiMetaResolveResult.getControllerMetas().forEach(controllerMeta -> {
+        apiResolveResult.getControllers().forEach(controllerMeta -> {
             Map<String, Object> params = new HashMap<>(8);
-            params.put("controllerMeta", controllerMeta);
+            params.put("controller", controllerMeta);
             params.put("config", config);
             File file = new File(config.getControllerPackagePath() + controllerMeta.getName() + ".java");
             render("template/Controller.vm", params, file);
         });
         // 生成service 接口文件
-        apiMetaResolveResult.getControllerMetas().forEach(controllerMeta -> {
+        apiResolveResult.getControllers().forEach(controllerMeta -> {
             Map<String, Object> params = new HashMap<>(8);
-            params.put("controllerMeta", controllerMeta);
+            params.put("controller", controllerMeta);
             params.put("config", config);
             File file = new File(
                     config.getServicePackagePath() + controllerMeta.getServiceName() + ".java");
             render("template/IService.vm", params, file);
         });
         // 生成 dto文件
-        apiMetaResolveResult.getDtoMetas().forEach(dtoMeta -> {
+        apiResolveResult.getDtos().forEach(dto -> {
             Map<String, Object> params = new HashMap<>(8);
-            params.put("definitionMeta", dtoMeta);
+            params.put("definition", dto);
             params.put("config", config);
-            File file = new File(config.getDtoPackagePath() + dtoMeta.getName() + ".java");
+            File file = new File(config.getDtoPackagePath() + dto.getName() + ".java");
             render("template/Dto.vm", params, file);
         });
     }

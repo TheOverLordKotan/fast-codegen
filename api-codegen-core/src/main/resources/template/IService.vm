@@ -2,43 +2,43 @@
 package ${config.basePackage}.${config.servicePackageName};
 
 ## import 依赖
-#foreach($import in $controllerMeta.dtoImports)
+#foreach($import in $controller.dtoImports)
 import $import;
 #end
 import ${config.basePackage}.${config.dtoPackageName}.*;
 import java.util.List;
 
 /**
- * @InterfaceName ${controllerMeta.serviceName}
- * @Author $controllerMeta.author
+ * @InterfaceName ${controller.serviceName}
+ * @Author $controller.author
  **/
-public interface ${controllerMeta.serviceName} {
+public interface ${controller.serviceName} {
 
-#if($controllerMeta.handlerMethodMetas)
-#foreach($handlerMethodMeta in $controllerMeta.handlerMethodMetas)
+#if($controller.handlerMethods)
+#foreach($handlerMethod in $controller.handlerMethods)
 
     /**
      * <pre>
-     * $handlerMethodMeta.summary
+     * $handlerMethod.summary
      * </pre>
-     * $handlerMethodMeta.description
+     * $handlerMethod.description
     ## 如果返回类型不为void，则需要增加描述
-#if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid())
+#if($handlerMethod.handlerMethodReturn.isNotVoid())
  *
-     * @return ${handlerMethodMeta.handlerMethodReturnMeta.description}
+     * @return ${handlerMethod.handlerMethodReturn.description}
      */
 #else
  */
 #end
-    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(#if($handlerMethodMeta.handlerMethodParamMetas)#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
-#if($handlerMethodParamMeta.tag == 3)##路径参数
-$handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+    public $handlerMethod.handlerMethodReturn.type ${handlerMethod.methodName}(#if($handlerMethod.handlerMethodParams)#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
+#if($handlerMethodParam.tag == 3)##路径参数
+$handlerMethodParam.type $handlerMethodParam.name#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
-#elseif($handlerMethodParamMeta.tag == 2)##请求体参数
-$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#elseif($handlerMethodParam.tag == 2)##请求体参数
+$handlerMethodParam.type ${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
-#elseif($handlerMethodParamMeta.tag == 1)##查询参数
-$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#elseif($handlerMethodParam.tag == 1)##查询参数
+$handlerMethodParam.type ${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
 #end#end#end);
 #end

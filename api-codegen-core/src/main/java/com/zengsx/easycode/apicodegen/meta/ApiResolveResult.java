@@ -10,15 +10,15 @@ import lombok.Data;
  * @Date: 2021-04-24 18:17
  */
 @Data
-public class ApiMetaResolveResult {
+public class ApiResolveResult {
 
     /**
      * controller对象
      */
-    private List<ControllerMeta> controllerMetas;
+    private List<Controller> controllers;
     /**
      * 需要生成的dto信息
      */
-    private List<DtoMeta> dtoMetas;
+    private List<Dto> dtos;
 
 }

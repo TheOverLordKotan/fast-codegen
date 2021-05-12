@@ -10,7 +10,7 @@ import lombok.Data;
  * @Date: 2021-04-19 15:15
  */
 @Data
-public class ControllerMeta {
+public class Controller {
 
     /**
      * controller 名称
@@ -47,6 +47,6 @@ public class ControllerMeta {
     /**
      * 当前类包含的 请求方法
      */
-    private List<HandlerMethodMeta> handlerMethodMetas;
+    private List<HandlerMethod> handlerMethods;
 
 }

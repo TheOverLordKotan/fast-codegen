@@ -9,7 +9,7 @@ import lombok.Data;
  * @Date: 2021-04-23 17:34
  */
 @Data
-public class HandlerMethodReturnMeta {
+public class HandlerMethodReturn {
 
     private String type;
 

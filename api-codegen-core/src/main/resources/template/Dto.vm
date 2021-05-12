@@ -10,15 +10,15 @@ import java.util.Date;
 import javax.validation.Valid;
 
 /**
- * @ClassName ${definitionMeta.name}
- * @Description ${definitionMeta.description}
- * @Author ${definitionMeta.author}
+ * @ClassName ${definition.name}
+ * @Description ${definition.description}
+ * @Author ${definition.author}
  **/
 @Data
 @JsonInclude(Include.NON_NULL)
-public class ${definitionMeta.name} {
+public class ${definition.name} {
 
-#foreach($property in $definitionMeta.properties)
+#foreach($property in $definition.properties)
 
     /**
      * ${property.description}

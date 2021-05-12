@@ -2,11 +2,11 @@
 package ${config.basePackage}.${config.controllerPackageName};
 
 ## import 依赖
-#foreach($import in $controllerMeta.dtoImports)
+#foreach($import in $controller.dtoImports)
 import $import;
 #end
 import ${config.basePackage}.${config.dtoPackageName}.*;
-import ${config.basePackage}.${config.servicePackageName}.${controllerMeta.serviceName};
+import ${config.basePackage}.${config.servicePackageName}.${controller.serviceName};
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,62 +19,62 @@ import org.springframework.stereotype.Controller;
 import java.util.List;
 
 /**
- * @ClassName ${controllerMeta.name}
- * @Description ${controllerMeta.description}
- * @Author $controllerMeta.author
+ * @ClassName ${controller.name}
+ * @Description ${controller.description}
+ * @Author $controller.author
  **/
 @Controller
-@RequestMapping("${controllerMeta.basePath}")
+@RequestMapping("${controller.basePath}")
 @Validated
-public class ${controllerMeta.name} {
+public class ${controller.name} {
 
-    private final ${controllerMeta.serviceName} service;
+    private final ${controller.serviceName} service;
 
-    public ${controllerMeta.name}(${controllerMeta.serviceName} service) {
+    public ${controller.name}(${controller.serviceName} service) {
         this.service = service;
     }
-#if($controllerMeta.handlerMethodMetas)
-#foreach($handlerMethodMeta in $controllerMeta.handlerMethodMetas)
+#if($controller.handlerMethods)
+#foreach($handlerMethod in $controller.handlerMethods)
 
     /**
      * <pre>
-     * $handlerMethodMeta.summary
+     * $handlerMethod.summary
      * </pre>
-     * $handlerMethodMeta.description
+     * $handlerMethod.description
     ## 如果返回类型不为void，则需要增加描述
-#if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid()) *
-     * @return ${handlerMethodMeta.handlerMethodReturnMeta.description}
+#if($handlerMethod.handlerMethodReturn.isNotVoid()) *
+     * @return ${handlerMethod.handlerMethodReturn.description}
      */
 #else
  */
 #end
-#if($handlerMethodMeta.enableResponseBody())
+#if($handlerMethod.enableResponseBody())
     @ResponseBody
 #end
-    @RequestMapping(value = "$handlerMethodMeta.url",
-            method = RequestMethod.$handlerMethodMeta.requestType,
-            produces = {#foreach($produce in $handlerMethodMeta.produces)"$produce"#if($velocityCount<$handlerMethodMeta.produces.size()),#end#end},
-            consumes = {#foreach($consume in $handlerMethodMeta.consumes)"$consume"#if($velocityCount<$handlerMethodMeta.consumes.size()),#end#end})
-    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(#if($handlerMethodMeta.handlerMethodParamMetas)#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
-#if($handlerMethodParamMeta.tag == 3)##路径参数
-@PathVariable("$handlerMethodParamMeta.name") $handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+    @RequestMapping(value = "$handlerMethod.url",
+            method = RequestMethod.$handlerMethod.requestType,
+            produces = {#foreach($produce in $handlerMethod.produces)"$produce"#if($velocityCount<$handlerMethod.produces.size()),#end#end},
+            consumes = {#foreach($consume in $handlerMethod.consumes)"$consume"#if($velocityCount<$handlerMethod.consumes.size()),#end#end})
+    public $handlerMethod.handlerMethodReturn.type ${handlerMethod.methodName}(#if($handlerMethod.handlerMethodParams)#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
+#if($handlerMethodParam.tag == 3)##路径参数
+@PathVariable("$handlerMethodParam.name") $handlerMethodParam.type $handlerMethodParam.name#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
-#elseif($handlerMethodParamMeta.tag == 2)##请求体参数
-@Validated #if($velocityCount<$handlerMethodMeta.enableRequestBody())@RequestBody #end$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#elseif($handlerMethodParam.tag == 2)##请求体参数
+@Validated #if($velocityCount<$handlerMethod.enableRequestBody())@RequestBody #end$handlerMethodParam.type ${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
-#elseif($handlerMethodParamMeta.tag == 1)##查询参数
-@Validated $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#elseif($handlerMethodParam.tag == 1)##查询参数
+@Validated $handlerMethodParam.type ${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
 #end#end#end) {
-       #if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid()) return#end service.${handlerMethodMeta.methodName}(#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
-#if($handlerMethodParamMeta.tag == 3)##路径参数
-$handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+       #if($handlerMethod.handlerMethodReturn.isNotVoid()) return#end service.${handlerMethod.methodName}(#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
+#if($handlerMethodParam.tag == 3)##路径参数
+$handlerMethodParam.name#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
                 #end
-#elseif($handlerMethodParamMeta.tag == 2)##请求体参数
-${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#elseif($handlerMethodParam.tag == 2)##请求体参数
+${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
                 #end
-#elseif($handlerMethodParamMeta.tag == 1)##查询参数
-${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+#elseif($handlerMethodParam.tag == 1)##查询参数
+${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
                 #end
 #end#end);
     }
