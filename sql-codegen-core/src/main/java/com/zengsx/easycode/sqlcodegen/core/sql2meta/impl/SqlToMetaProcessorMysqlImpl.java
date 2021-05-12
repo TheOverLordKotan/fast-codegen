@@ -4,22 +4,16 @@ import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLDataTypeImpl;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
-import com.alibaba.fastjson.JSON;
 import com.zengsx.easycode.codegen.utils.FormatUtils;
 import com.zengsx.easycode.sqlcodegen.config.GlobalConfig;
 import com.zengsx.easycode.sqlcodegen.core.sql2meta.ISqlToMetaProcessor;
 import com.zengsx.easycode.sqlcodegen.core.sql2meta.context.MysqlContext;
 import com.zengsx.easycode.sqlcodegen.meta.Column;
 import com.zengsx.easycode.sqlcodegen.meta.Table;
-import java.io.File;
-import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
-import org.apache.commons.io.IOUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -40,15 +34,6 @@ public class SqlToMetaProcessorMysqlImpl implements ISqlToMetaProcessor<MysqlCon
     @Override
     public void setContext(MysqlContext mysqlContext) {
 
-    }
-
-    @SneakyThrows
-    public static void main(String[] args) {
-        File sqlFile = new File("entity-convertor/src/main/resources/db/TableFile.sql");
-        System.out.println(sqlFile.getAbsolutePath());
-        String sql = IOUtils.toString(new FileInputStream(sqlFile), StandardCharsets.UTF_8);
-        List<Table> tables = new SqlToMetaProcessorMysqlImpl().convertTable(sql);
-        System.out.println(JSON.toJSONString(tables));
     }
 
     @Override
@@ -92,14 +77,6 @@ public class SqlToMetaProcessorMysqlImpl implements ISqlToMetaProcessor<MysqlCon
 
                         return column;
                     }).collect(Collectors.toList()));
-                    table.setImports(
-                            table.getColumns()
-                                    .stream()
-                                    .map(Column::getImports)
-                                    .filter(o -> !StringUtils.isEmpty(o))
-                                    .distinct()
-                                    .collect(Collectors.toList())
-                    );
                     return table;
                 }).collect(Collectors.toList());
     }
@@ -143,9 +120,9 @@ public class SqlToMetaProcessorMysqlImpl implements ISqlToMetaProcessor<MysqlCon
         put("boolean", "Boolean");
         put("bit", "boolean");
 
-        put("date", "java.util.Date");
-        put("time", "java.util.Date");
-        put("datetime", "java.util.Date");
+        put("date", "java.time.LocalDate");
+        put("time", "java.time.LocalTime");
+        put("datetime", "java.time.LocalDateTime");
         put("timestamp", "java.util.Date");
     }};
 }

@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -20,6 +21,7 @@ import org.apache.commons.io.IOUtils;
  * @Author: Mr.Zeng
  * @Date: 2021-04-28 13:37
  */
+@Slf4j
 public class SqlCodegenRunner {
 
     /**
@@ -28,6 +30,7 @@ public class SqlCodegenRunner {
      * @param config 全局配置
      */
     public void start(GlobalConfig config) {
+        checkConfig(config);
         DB db = EnumUtils.getEnum(DB.class, config.getDbName());
         ORM orm = EnumUtils.getEnum(ORM.class, config.getOrmName());
         String sql = getCreateSqlContent(config.getSqlFilePath());
@@ -40,6 +43,15 @@ public class SqlCodegenRunner {
     }
 
     /**
+     * 检查配置是否有误
+     *
+     * @param config 配置
+     */
+    public void checkConfig(GlobalConfig config) {
+        // 配置检查 TODO
+    }
+
+    /**
      * 获取sql文件内容
      *
      * @param sqlFilePath sql文件路径
@@ -48,7 +60,7 @@ public class SqlCodegenRunner {
     @SneakyThrows
     public String getCreateSqlContent(String sqlFilePath) {
         File sqlFile = new File(sqlFilePath);
-        System.out.println("sqlFilePath:" + sqlFile.getAbsolutePath());
+        log.info("sqlFilePath:" + sqlFile.getAbsolutePath());
         return IOUtils.toString(new FileInputStream(sqlFile), StandardCharsets.UTF_8);
     }
 

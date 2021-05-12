@@ -35,17 +35,21 @@ public class Column {
 
     private Boolean isLogicalDeleteField;
 
+    private String logicalDeletedValue;
+
+    private String logicalNotDeletedValue;
+
     /**
      * @return java type name
      */
-    public String getSimpleJavaType() {
+    public String getTypeName() {
         return javaType.contains(".") ? javaType.substring(javaType.lastIndexOf(".") + 1) : javaType;
     }
 
     /**
      * @return import
      */
-    public String getImports() {
+    public String getImport() {
         return javaType.contains(".") ? javaType : null;
     }
 

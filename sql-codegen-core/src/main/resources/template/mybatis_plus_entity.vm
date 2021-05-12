@@ -1,19 +1,12 @@
 package ${config.basePackage}.${config.entityPackageName};
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import lombok.Data;
 #foreach($import in $entity.imports)
 import ${import};
 #end
 
 /**
  * ${entity.className} class
- *
+ * @Author maven-plugin-sql-codegen
  * @Description ${entity.tableComment}
  **/
 @Data
@@ -30,9 +23,9 @@ public class ${entity.className} {
     @TableField(value = "${column.columnName}"#if($column.isAutoFillWhenInsert), fill = FieldFill.INSERT#elseif($column.isAutoFillWhenUpdate), fill = FieldFill.UPDATE#elseif($column.isAutoFillWhenInsertOrUpdate), fill = FieldFill.INSERT_UPDATE#end)
 #end
 #if(${column.isLogicalDeleteField})
-    @TableLogic
+    @TableLogic(value="${column.logicalNotDeletedValue}",delval="${column.logicalDeletedValue}")
 #end
-    private ${column.getSimpleJavaType()} ${column.fieldName};
+    private ${column.getTypeName()} ${column.fieldName};
 #end
 
 }

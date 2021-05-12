@@ -1,6 +1,7 @@
 package com.zengsx.easycode.sqlcodegen.config;
 
 import java.io.File;
+import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,18 +16,18 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalConfig {
 
     public GlobalConfig() {
-        log.info("entity generate config init");
+        log.info("orm generate config init");
     }
 
     /**
      * 数据库类型
      */
-    private String dbName = "mysql";
+    private String dbName;
 
     /**
      * orm框架类型
      */
-    private String ormName = "mybatis-plus";
+    private String ormName;
 
     /**
      * sql文件路径
@@ -41,17 +42,17 @@ public class GlobalConfig {
     /**
      * 项目root包(Application类所在包路径)
      */
-    private String basePackage = "";
+    private String basePackage;
 
     /**
      * 实体包名
      */
-    private String entityPackageName = "entities";
+    private String entityPackageName;
 
     /**
      * 实体名称后缀
      */
-    private String entitySuffix = "DO";
+    private String entitySuffix;
 
     /**
      * mybatis的配置
@@ -69,7 +70,10 @@ public class GlobalConfig {
      * @return 主包路径
      */
     public String getBasePackagePath() {
-        return srcJavaPath + File.separator + basePackage.replace(".", File.separator) + File.separator;
+        return srcJavaPath
+                + File.separator
+                + Optional.ofNullable(basePackage).orElse("").replace(".", File.separator)
+                + File.separator;
     }
 
 }

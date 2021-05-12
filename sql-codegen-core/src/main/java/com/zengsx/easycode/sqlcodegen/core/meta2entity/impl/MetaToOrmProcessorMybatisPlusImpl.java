@@ -2,14 +2,22 @@ package com.zengsx.easycode.sqlcodegen.core.meta2entity.impl;
 
 import com.zengsx.easycode.codegen.utils.VelocityUtils;
 import com.zengsx.easycode.sqlcodegen.config.GlobalConfig;
+import com.zengsx.easycode.sqlcodegen.config.MybatisPlusConfig;
+import com.zengsx.easycode.sqlcodegen.config.MybatisPlusConfig.LogicDeleteColumn;
 import com.zengsx.easycode.sqlcodegen.core.meta2entity.IMetaToOrmProcessor;
 import com.zengsx.easycode.sqlcodegen.core.meta2entity.context.MybatisPlusContext;
 import com.zengsx.easycode.sqlcodegen.meta.Table;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @ClassName: MetaToEntityProcessorMybatisPlusImpl
@@ -36,6 +44,7 @@ public class MetaToOrmProcessorMybatisPlusImpl implements IMetaToOrmProcessor<My
         tables.forEach(table -> {
             processLogicalDeleteField(table);
             processAutoFillFiled(table);
+            processImports(table);
             Map<String, Object> params = new HashMap<>(8);
             params.put("entity", table);
             params.put("config", config);
@@ -44,15 +53,46 @@ public class MetaToOrmProcessorMybatisPlusImpl implements IMetaToOrmProcessor<My
         });
     }
 
+    private void processImports(Table table) {
+        List<String> imports = new ArrayList<>();
+        imports.add("lombok.Data");
+        imports.add("com.baomidou.mybatisplus.annotation.IdType");
+        imports.add("com.baomidou.mybatisplus.annotation.TableId");
+        imports.add("com.baomidou.mybatisplus.annotation.TableName");
+        imports.add("com.baomidou.mybatisplus.annotation.TableField");
+        table.getColumns().forEach(column -> {
+            if (Boolean.TRUE.equals(column.getIsLogicalDeleteField())) {
+                imports.add("com.baomidou.mybatisplus.annotation.TableLogic");
+            }
+            if (Boolean.TRUE.equals(column.getIsAutoFillWhenInsert())
+                    || Boolean.TRUE.equals(column.getIsAutoFillWhenUpdate())
+                    || Boolean.TRUE.equals(column.getIsAutoFillWhenInsertOrUpdate())) {
+                imports.add("com.baomidou.mybatisplus.annotation.FieldFill");
+            }
+            if(!ObjectUtils.isEmpty(column.getImport())){
+                imports.add(column.getImport());
+            }
+        });
+        table.setImports(imports.stream().distinct().collect(Collectors.toList()));
+    }
+
     /**
      * 处理逻辑删除字段
      *
      * @param table 表信息
      */
     private void processLogicalDeleteField(Table table) {
+        Map<String, LogicDeleteColumn> logicDelColMap = Optional.ofNullable(config.getMybatisPlusConfig())
+                .map(MybatisPlusConfig::getLogicDelCols)
+                .orElse(Collections.emptyList())
+                .stream()
+                .collect(Collectors.toMap(LogicDeleteColumn::getColumnName, Function.identity()));
         table.getColumns().forEach(column -> {
-            if (column.getColumnName().equals(config.getMybatisPlusConfig().getLogicDelColumnName())) {
+            if (logicDelColMap.containsKey(column.getColumnName())) {
+                LogicDeleteColumn logicDeleteColumn = logicDelColMap.get(column.getColumnName());
                 column.setIsLogicalDeleteField(true);
+                column.setLogicalDeletedValue(logicDeleteColumn.getDeletedValue());
+                column.setLogicalNotDeletedValue(logicDeleteColumn.getNotDeletedValue());
             }
         });
     }
@@ -65,17 +105,27 @@ public class MetaToOrmProcessorMybatisPlusImpl implements IMetaToOrmProcessor<My
     public void processAutoFillFiled(Table table) {
         Optional.ofNullable(config).map(GlobalConfig::getMybatisPlusConfig).ifPresent(mybatisConfig -> {
             String tableName = table.getTableName();
+            Set<String> autoInsertFields = Optional
+                    .ofNullable(mybatisConfig.getAutoInsertFields())
+                    .orElse(Collections.emptySet());
+
+            Set<String> autoUpdateFields = Optional
+                    .ofNullable(mybatisConfig.getAutoUpdateFields())
+                    .orElse(Collections.emptySet());
+
+            Set<String> autoInsertOrUpdateFields = Optional
+                    .ofNullable(mybatisConfig.getAutoInsertOrUpdateFields())
+                    .orElse(Collections.emptySet());
+
             table.getColumns().forEach(column -> {
                 String colName = column.getColumnName();
                 String uniqueColName = tableName + "@" + column.getColumnName();
-                if (mybatisConfig.getAutoInsertFields().contains(colName)
-                        || mybatisConfig.getAutoInsertFields().contains(uniqueColName)) {
+                if (autoInsertFields.contains(colName) || autoInsertFields.contains(uniqueColName)) {
                     column.setIsAutoFillWhenInsert(true);
-                } else if (mybatisConfig.getAutoUpdateFields().contains(colName)
-                        || mybatisConfig.getAutoUpdateFields().contains(uniqueColName)) {
+                } else if (autoUpdateFields.contains(colName) || autoUpdateFields.contains(uniqueColName)) {
                     column.setIsAutoFillWhenUpdate(true);
-                } else if (mybatisConfig.getAutoInsertOrUpdateFields().contains(colName)
-                        || mybatisConfig.getAutoInsertOrUpdateFields().contains(uniqueColName)) {
+                } else if (autoInsertOrUpdateFields.contains(colName)
+                        || autoInsertOrUpdateFields.contains(uniqueColName)) {
                     column.setIsAutoFillWhenInsertOrUpdate(true);
                 }
             });
