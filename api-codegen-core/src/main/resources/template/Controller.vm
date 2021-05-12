@@ -55,32 +55,28 @@ public class ${controllerMeta.name} {
             method = RequestMethod.$handlerMethodMeta.requestType,
             produces = {#foreach($produce in $handlerMethodMeta.produces)"$produce"#if($velocityCount<$handlerMethodMeta.produces.size()),#end#end},
             consumes = {#foreach($consume in $handlerMethodMeta.consumes)"$consume"#if($velocityCount<$handlerMethodMeta.consumes.size()),#end#end})
-    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(
-#if($handlerMethodMeta.handlerMethodParamMetas)
-#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
+    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(#if($handlerMethodMeta.handlerMethodParamMetas)#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
 #if($handlerMethodParamMeta.tag == 3)##路径参数
-            @PathVariable("$handlerMethodParamMeta.name") $handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
+@PathVariable("$handlerMethodParamMeta.name") $handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+            #end
 #elseif($handlerMethodParamMeta.tag == 2)##请求体参数
-            @Validated #if($velocityCount<$handlerMethodMeta.enableRequestBody())@RequestBody #end$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
+@Validated #if($velocityCount<$handlerMethodMeta.enableRequestBody())@RequestBody #end$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+            #end
 #elseif($handlerMethodParamMeta.tag == 1)##查询参数
-            @Validated $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
+@Validated $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+            #end
 #end#end#end) {
-       #if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid()) return#end service.${handlerMethodMeta.methodName}(
-#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
+       #if($handlerMethodMeta.handlerMethodReturnMeta.isNotVoid()) return#end service.${handlerMethodMeta.methodName}(#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
 #if($handlerMethodParamMeta.tag == 3)##路径参数
-                $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
+$handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+                #end
 #elseif($handlerMethodParamMeta.tag == 2)##请求体参数
-                ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
+${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+                #end
 #elseif($handlerMethodParamMeta.tag == 1)##查询参数
-                ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end#end#end
-
-        );
+${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+                #end
+#end#end);
     }
 #end
 #end

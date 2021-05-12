@@ -30,23 +30,17 @@ public interface ${controllerMeta.serviceName} {
 #else
  */
 #end
-    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(
-#if($handlerMethodMeta.handlerMethodParamMetas)
-#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
+    public $handlerMethodMeta.handlerMethodReturnMeta.type ${handlerMethodMeta.methodName}(#if($handlerMethodMeta.handlerMethodParamMetas)#foreach($handlerMethodParamMeta in $handlerMethodMeta.handlerMethodParamMetas)
 #if($handlerMethodParamMeta.tag == 3)##路径参数
-            $handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
+$handlerMethodParamMeta.type $handlerMethodParamMeta.name#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+            #end
 #elseif($handlerMethodParamMeta.tag == 2)##请求体参数
-            $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
+$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+            #end
 #elseif($handlerMethodParamMeta.tag == 1)##查询参数
-            $handlerMethodParamMeta.type ${handlerMethodParamMeta.name}DTO#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
-#end
-#end
-#end
-#end
-
-    );
+$handlerMethodParamMeta.type ${handlerMethodParamMeta.name}#if($velocityCount<$handlerMethodMeta.handlerMethodParamMetas.size()),
+            #end
+#end#end#end);
 #end
 #end
 
