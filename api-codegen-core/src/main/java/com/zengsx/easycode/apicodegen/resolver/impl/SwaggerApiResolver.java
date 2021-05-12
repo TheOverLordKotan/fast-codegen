@@ -137,54 +137,56 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
             Dto dto = new Dto();
             dto.setName(SwaggerUtils.getClassNameFromDefinitionName(definitionName));
             dto.setDescription(modelImpl.getDescription());
-            dto.setProperties(
-                    modelImpl.getProperties().entrySet().stream()
-                            .map(entry -> {
-                                Property property = entry.getValue();
-                                DtoFieldMeta dtoFieldMeta = new DtoFieldMeta();
-                                dtoFieldMeta.setName(entry.getKey());
-                                dtoFieldMeta.setDescription(property.getDescription());
-                                dtoFieldMeta.setRequired(property.getRequired());
-                                if (property instanceof ArrayProperty) {
-                                    // array 暂不支持默认值
-                                    Property itemType = ((ArrayProperty) property).getItems();
-                                    String subType;
-                                    if (itemType instanceof RefProperty) {
-                                        RefProperty refProperty = (RefProperty) itemType;
-                                        subType = SwaggerUtils.getClassNameFromRefPath(refProperty.getOriginalRef());
-                                    } else if (itemType instanceof ArrayProperty) {
-                                        throw new RuntimeException("目前只支持一级List,不支持多级");
-                                    } else if (itemType instanceof ObjectProperty) {
-                                        throw new RuntimeException("请单独定义对象，并通过 $ref 引用");
+            Optional.ofNullable(modelImpl.getProperties()).ifPresent(properties->{
+                dto.setProperties(
+                        properties.entrySet().stream()
+                                .map(entry -> {
+                                    Property property = entry.getValue();
+                                    DtoFieldMeta dtoFieldMeta = new DtoFieldMeta();
+                                    dtoFieldMeta.setName(entry.getKey());
+                                    dtoFieldMeta.setDescription(property.getDescription());
+                                    dtoFieldMeta.setRequired(property.getRequired());
+                                    if (property instanceof ArrayProperty) {
+                                        // array 暂不支持默认值
+                                        Property itemType = ((ArrayProperty) property).getItems();
+                                        String subType;
+                                        if (itemType instanceof RefProperty) {
+                                            RefProperty refProperty = (RefProperty) itemType;
+                                            subType = SwaggerUtils.getClassNameFromRefPath(refProperty.getOriginalRef());
+                                        } else if (itemType instanceof ArrayProperty) {
+                                            throw new RuntimeException("目前只支持一级List,不支持多级");
+                                        } else if (itemType instanceof ObjectProperty) {
+                                            throw new RuntimeException("请单独定义对象，并通过 $ref 引用");
+                                        } else {
+                                            subType = SwaggerUtils
+                                                    .swaggerTypeToJavaType(itemType.getType(), itemType.getFormat());
+                                        }
+                                        dtoFieldMeta.setType(String.format("List<%s>", subType));
+                                    } else if (property instanceof RefProperty) {
+                                        RefProperty refProperty = (RefProperty) property;
+                                        dtoFieldMeta.setType(
+                                                SwaggerUtils.getClassNameFromRefPath(refProperty.getOriginalRef()));
+                                    } else if (property instanceof DateProperty) {
+                                        dtoFieldMeta.setType("Date");
+                                    } else if (property instanceof DateTimeProperty) {
+                                        throw new RuntimeException("暂不支持的属性类型");
+                                    } else if (entry.getValue() instanceof ObjectProperty) {
+                                        throw new RuntimeException("暂不支持的属性类型");
+                                    } else if (entry.getValue() instanceof MapProperty) {
+                                        throw new RuntimeException("暂不支持的属性类型");
+                                    } else if (property instanceof UntypedProperty) {
+                                        log.info("DTO:{},存在未定义类型字段:{}", definitionName, entry.getKey());
                                     } else {
-                                        subType = SwaggerUtils
-                                                .swaggerTypeToJavaType(itemType.getType(), itemType.getFormat());
+                                        dtoFieldMeta.setType(SwaggerUtils
+                                                .swaggerTypeToJavaType(property.getType(), property.getFormat()));
+                                        // 获取默认值
+                                        dtoFieldMeta.setValue(SwaggerUtils.getPropertyDefaultValue(property));
                                     }
-                                    dtoFieldMeta.setType(String.format("List<%s>", subType));
-                                } else if (property instanceof RefProperty) {
-                                    RefProperty refProperty = (RefProperty) property;
-                                    dtoFieldMeta.setType(
-                                            SwaggerUtils.getClassNameFromRefPath(refProperty.getOriginalRef()));
-                                } else if (property instanceof DateProperty) {
-                                    dtoFieldMeta.setType("Date");
-                                } else if (property instanceof DateTimeProperty) {
-                                    throw new RuntimeException("暂不支持的属性类型");
-                                } else if (entry.getValue() instanceof ObjectProperty) {
-                                    throw new RuntimeException("暂不支持的属性类型");
-                                } else if (entry.getValue() instanceof MapProperty) {
-                                    throw new RuntimeException("暂不支持的属性类型");
-                                } else if (property instanceof UntypedProperty) {
-                                    log.info("DTO:{},存在未定义类型字段:{}", definitionName, entry.getKey());
-                                } else {
-                                    dtoFieldMeta.setType(SwaggerUtils
-                                            .swaggerTypeToJavaType(property.getType(), property.getFormat()));
-                                    // 获取默认值
-                                    dtoFieldMeta.setValue(SwaggerUtils.getPropertyDefaultValue(property));
-                                }
-                                return dtoFieldMeta;
-                            })
-                            .collect(Collectors.toList())
-            );
+                                    return dtoFieldMeta;
+                                })
+                                .collect(Collectors.toList())
+                );
+            });
             dtos.add(dto);
         });
         return dtos;

@@ -18,17 +18,19 @@ public interface ${controller.serviceName} {
 #foreach($handlerMethod in $controller.handlerMethods)
 
     /**
-     * <pre>
-     * $handlerMethod.summary
-     * </pre>
-     * $handlerMethod.description
-    ## 如果返回类型不为void，则需要增加描述
+     * @summary $handlerMethod.summary
+     * @description $handlerMethod.description
+     *
+#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
+     * @param ${handlerMethodParam.name} ${handlerMethodParam.description}
+#end
+## 如果返回类型不为void，则需要增加描述
 #if($handlerMethod.handlerMethodReturn.isNotVoid())
- *
+     *
      * @return ${handlerMethod.handlerMethodReturn.description}
      */
 #else
- */
+     */
 #end
     public $handlerMethod.handlerMethodReturn.type ${handlerMethod.methodName}(#if($handlerMethod.handlerMethodParams)#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
 #if($handlerMethodParam.tag == 3)##路径参数
