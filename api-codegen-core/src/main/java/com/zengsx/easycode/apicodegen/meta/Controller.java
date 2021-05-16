@@ -10,7 +10,7 @@ import lombok.Data;
  * @Date: 2021-04-19 15:15
  */
 @Data
-public class Controller {
+public class Controller  {
 
     /**
      * controller 名称
@@ -21,9 +21,9 @@ public class Controller {
      */
     private String serviceName;
     /**
-     * 作者
+     * feignClient对象名称
      */
-    private String author;
+    private String feignClientName;
     /**
      * 描述
      */
@@ -36,14 +36,12 @@ public class Controller {
      * 接收类型
      */
     private List<String> consumes;
+
     /**
      * 输出类型
      */
     private List<String> produces;
-    /**
-     * 当前类需要导入的依赖
-     */
-    private List<String> dtoImports;
+
     /**
      * 当前类包含的 请求方法
      */

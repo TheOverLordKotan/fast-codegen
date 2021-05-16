@@ -5,15 +5,13 @@ import com.zengsx.easycode.apicodegen.constants.SwaggerConstants;
 import com.zengsx.easycode.apicodegen.meta.ApiResolveResult;
 import com.zengsx.easycode.apicodegen.meta.Controller;
 import com.zengsx.easycode.apicodegen.meta.Dto;
-import com.zengsx.easycode.apicodegen.meta.Dto.DtoFieldMeta;
+import com.zengsx.easycode.apicodegen.meta.Dto.DtoField;
 import com.zengsx.easycode.apicodegen.meta.HandlerMethod;
 import com.zengsx.easycode.apicodegen.meta.HandlerMethodParam;
 import com.zengsx.easycode.apicodegen.meta.HandlerMethodReturn;
 import com.zengsx.easycode.apicodegen.resolver.IApiResolver;
 import com.zengsx.easycode.apicodegen.util.SwaggerUtils;
 import io.swagger.models.ArrayModel;
-import io.swagger.models.Contact;
-import io.swagger.models.Info;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
@@ -110,13 +108,6 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
         ApiResolveResult resolveResult = new ApiResolveResult();
         resolveResult.setControllers(new ArrayList<>(controllerMetaMap.values()));
         resolveResult.setDtos(dtos);
-        // 代码所属者
-        String author = Optional.ofNullable(swagger.getInfo())
-                .map(Info::getContact)
-                .map(Contact::getName)
-                .orElse("codegen");
-        resolveResult.getDtos().forEach(dto -> dto.setAuthor(author));
-        resolveResult.getControllers().forEach(controller -> controller.setAuthor(author));
         return resolveResult;
     }
 
@@ -137,22 +128,23 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
             Dto dto = new Dto();
             dto.setName(SwaggerUtils.getClassNameFromDefinitionName(definitionName));
             dto.setDescription(modelImpl.getDescription());
-            Optional.ofNullable(modelImpl.getProperties()).ifPresent(properties->{
+            Optional.ofNullable(modelImpl.getProperties()).ifPresent(properties -> {
                 dto.setProperties(
                         properties.entrySet().stream()
                                 .map(entry -> {
                                     Property property = entry.getValue();
-                                    DtoFieldMeta dtoFieldMeta = new DtoFieldMeta();
-                                    dtoFieldMeta.setName(entry.getKey());
-                                    dtoFieldMeta.setDescription(property.getDescription());
-                                    dtoFieldMeta.setRequired(property.getRequired());
+                                    DtoField dtoField = new DtoField();
+                                    dtoField.setName(entry.getKey());
+                                    dtoField.setDescription(property.getDescription());
+                                    dtoField.setRequired(property.getRequired());
                                     if (property instanceof ArrayProperty) {
                                         // array 暂不支持默认值
                                         Property itemType = ((ArrayProperty) property).getItems();
                                         String subType;
                                         if (itemType instanceof RefProperty) {
                                             RefProperty refProperty = (RefProperty) itemType;
-                                            subType = SwaggerUtils.getClassNameFromRefPath(refProperty.getOriginalRef());
+                                            subType = SwaggerUtils
+                                                    .getClassNameFromRefPath(refProperty.getOriginalRef());
                                         } else if (itemType instanceof ArrayProperty) {
                                             throw new RuntimeException("目前只支持一级List,不支持多级");
                                         } else if (itemType instanceof ObjectProperty) {
@@ -161,15 +153,15 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                                             subType = SwaggerUtils
                                                     .swaggerTypeToJavaType(itemType.getType(), itemType.getFormat());
                                         }
-                                        dtoFieldMeta.setType(String.format("List<%s>", subType));
+                                        dtoField.setType(String.format("List<%s>", subType));
                                     } else if (property instanceof RefProperty) {
                                         RefProperty refProperty = (RefProperty) property;
-                                        dtoFieldMeta.setType(
+                                        dtoField.setType(
                                                 SwaggerUtils.getClassNameFromRefPath(refProperty.getOriginalRef()));
                                     } else if (property instanceof DateProperty) {
-                                        dtoFieldMeta.setType("Date");
+                                        dtoField.setType("LocalDate");
                                     } else if (property instanceof DateTimeProperty) {
-                                        throw new RuntimeException("暂不支持的属性类型");
+                                        dtoField.setType("LocalDateTime");
                                     } else if (entry.getValue() instanceof ObjectProperty) {
                                         throw new RuntimeException("暂不支持的属性类型");
                                     } else if (entry.getValue() instanceof MapProperty) {
@@ -177,12 +169,12 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                                     } else if (property instanceof UntypedProperty) {
                                         log.info("DTO:{},存在未定义类型字段:{}", definitionName, entry.getKey());
                                     } else {
-                                        dtoFieldMeta.setType(SwaggerUtils
+                                        dtoField.setType(SwaggerUtils
                                                 .swaggerTypeToJavaType(property.getType(), property.getFormat()));
                                         // 获取默认值
-                                        dtoFieldMeta.setValue(SwaggerUtils.getPropertyDefaultValue(property));
+                                        dtoField.setValue(SwaggerUtils.getPropertyDefaultValue(property));
                                     }
-                                    return dtoFieldMeta;
+                                    return dtoField;
                                 })
                                 .collect(Collectors.toList())
                 );
@@ -200,12 +192,12 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
      */
     private Map<String, Controller> getControllerMap(Swagger swagger) {
         Map<String, Controller> controllerMetaMap = new HashMap<>(swagger.getTags().size());
-
         // controller定义
         swagger.getTags().forEach(tag -> {
             Controller controller = new Controller();
             controller.setName(SwaggerUtils.wrapControllerClassName(tag.getName()));
             controller.setServiceName(SwaggerUtils.wrapControllerServiceClassName(tag.getName()));
+            controller.setFeignClientName(SwaggerUtils.wrapFeignClientClassName(tag.getName()));
             controller.setDescription(tag.getDescription());
             controller.setBasePath(swagger.getBasePath());
             controller.setConsumes(Optional.ofNullable(swagger.getConsumes()).orElse(Collections.emptyList()));
@@ -275,16 +267,16 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
             dto.setDescription(opName + "方法查询参数");
             dto.setProperties(queryParameters.stream()
                     .map(o -> {
-                        DtoFieldMeta dtoFieldMeta = new DtoFieldMeta();
-                        dtoFieldMeta.setRequired(o.getRequired());
-                        dtoFieldMeta.setName(o.getName());
+                        DtoField dtoField = new DtoField();
+                        dtoField.setRequired(o.getRequired());
+                        dtoField.setName(o.getName());
                         // 默认值
-                        dtoFieldMeta.setValue(
+                        dtoField.setValue(
                                 Optional.ofNullable(o.getDefaultValue())
                                         .map(Object::toString)
                                         .orElse(null)
                         );
-                        dtoFieldMeta.setDescription(o.getDescription());
+                        dtoField.setDescription(o.getDescription());
                         if (SwaggerConstants.TYPE_ARRAY.equals(o.getType())) {
                             if (null == o.getItems()) {
                                 throw new RuntimeException("QueryParam array类型参数应该具备子类型!");
@@ -294,11 +286,11 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                             }
                             String type = o.getItems().getType();
                             String format = o.getItems().getFormat();
-                            dtoFieldMeta.setType(SwaggerUtils.swaggerTypeToJavaType(type, format));
+                            dtoField.setType(SwaggerUtils.swaggerTypeToJavaType(type, format));
                         } else {
-                            dtoFieldMeta.setType(SwaggerUtils.swaggerTypeToJavaType(o.getType(), o.getFormat()));
+                            dtoField.setType(SwaggerUtils.swaggerTypeToJavaType(o.getType(), o.getFormat()));
                         }
-                        return dtoFieldMeta;
+                        return dtoField;
                     }).collect(Collectors.toList()));
 
             dtos.add(dto);

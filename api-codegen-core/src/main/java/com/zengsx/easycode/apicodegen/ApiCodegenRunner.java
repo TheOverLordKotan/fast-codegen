@@ -4,10 +4,13 @@ package com.zengsx.easycode.apicodegen;
 import static com.zengsx.easycode.common.utils.VelocityUtils.render;
 
 import com.zengsx.easycode.apicodegen.config.GlobalConfig;
-import com.zengsx.easycode.apicodegen.meta.Dto;
+import com.zengsx.easycode.apicodegen.config.PathConfig;
+import com.zengsx.easycode.apicodegen.enums.GenerateType;
 import com.zengsx.easycode.apicodegen.meta.ApiResolveResult;
+import com.zengsx.easycode.apicodegen.meta.Dto;
 import com.zengsx.easycode.apicodegen.resolver.impl.SwaggerApiResolver;
 import com.zengsx.easycode.apicodegen.util.SwaggerUtils;
+import com.zengsx.easycode.common.utils.EnumUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
@@ -44,8 +47,27 @@ public class ApiCodegenRunner {
                 .collect(Collectors.toList());
         // 检查重名dto
         checkDuplicatedNameDto(resolverApiResolveResults);
-        // 生成文件
-        resolverApiResolveResults.forEach(apiResolveResult -> swaggerToFile(config, apiResolveResult));
+
+        GenerateType generateType = EnumUtils.getEnum(GenerateType.class, config.getGenerateType());
+        switch (generateType) {
+            case SPRING_MVC:
+                // 生成文件
+                resolverApiResolveResults.forEach(apiResolveResult -> {
+                    generateControllerFile(config, apiResolveResult);
+                    generateServiceFile(config, apiResolveResult);
+                    generateDtoFile(config, apiResolveResult);
+                });
+                break;
+            case FEIGN_CLIENT:
+                // 生成文件
+                resolverApiResolveResults.forEach(apiResolveResult -> {
+                    generateFeignClientFile(config, apiResolveResult);
+                    generateDtoFile(config, apiResolveResult);
+                });
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -75,7 +97,6 @@ public class ApiCodegenRunner {
         return new SwaggerApiResolver().resolve(SwaggerUtils.parseSwagger(content));
     }
 
-
     /**
      * 检查重名dto
      *
@@ -95,37 +116,79 @@ public class ApiCodegenRunner {
         });
     }
 
+
     /**
-     * swagger to file
+     * generate  file
      *
-     * @param config 全局配置
+     * @param config           全局配置
      * @param apiResolveResult 解析结果
      */
-    public void swaggerToFile(GlobalConfig config, ApiResolveResult apiResolveResult) {
+    public void generateControllerFile(GlobalConfig config, ApiResolveResult apiResolveResult) {
+        PathConfig pathConfig = new PathConfig(config);
         // 生成controller文件
         apiResolveResult.getControllers().forEach(controllerMeta -> {
             Map<String, Object> params = new HashMap<>(8);
             params.put("controller", controllerMeta);
             params.put("config", config);
-            File file = new File(config.getControllerPackagePath() + controllerMeta.getName() + ".java");
+            File file = new File(pathConfig.getControllerPackagePath() + controllerMeta.getName() + ".java");
             render("template/Controller.vm", params, file);
         });
+    }
+
+    /**
+     * generate  file
+     *
+     * @param config           全局配置
+     * @param apiResolveResult 解析结果
+     */
+    public void generateServiceFile(GlobalConfig config, ApiResolveResult apiResolveResult) {
+        PathConfig pathConfig = new PathConfig(config);
         // 生成service 接口文件
         apiResolveResult.getControllers().forEach(controllerMeta -> {
             Map<String, Object> params = new HashMap<>(8);
             params.put("controller", controllerMeta);
             params.put("config", config);
             File file = new File(
-                    config.getServicePackagePath() + controllerMeta.getServiceName() + ".java");
+                    pathConfig.getServicePackagePath() + controllerMeta.getServiceName() + ".java");
             render("template/IService.vm", params, file);
         });
+    }
+
+
+    /**
+     * generate  file
+     *
+     * @param config           全局配置
+     * @param apiResolveResult 解析结果
+     */
+    public void generateDtoFile(GlobalConfig config, ApiResolveResult apiResolveResult) {
+        PathConfig pathConfig = new PathConfig(config);
         // 生成 dto文件
         apiResolveResult.getDtos().forEach(dto -> {
             Map<String, Object> params = new HashMap<>(8);
             params.put("definition", dto);
             params.put("config", config);
-            File file = new File(config.getDtoPackagePath() + dto.getName() + ".java");
+            File file = new File(pathConfig.getDtoPackagePath() + dto.getName() + ".java");
             render("template/Dto.vm", params, file);
+        });
+    }
+
+    /**
+     * generate  file
+     *
+     * @param config           全局配置
+     * @param apiResolveResult 解析结果
+     */
+    public void generateFeignClientFile(GlobalConfig config, ApiResolveResult apiResolveResult) {
+        PathConfig pathConfig = new PathConfig(config);
+        // 生成controller文件
+        apiResolveResult.getControllers().forEach(controllerMeta -> {
+            Map<String, Object> params = new HashMap<>(8);
+            params.put("controller", controllerMeta);
+            params.put("config", config);
+            File file = new File(
+                    pathConfig.getFeignClientPackagePath() + controllerMeta.getFeignClientName() + ".java");
+            render("template/FeignClient.vm", params, file);
         });
     }
 

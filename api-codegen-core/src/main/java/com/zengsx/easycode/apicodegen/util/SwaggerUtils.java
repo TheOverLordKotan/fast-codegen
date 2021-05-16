@@ -72,6 +72,9 @@ public class SwaggerUtils {
         return "I" + name + "AutogenService";
     }
 
+    public static String wrapFeignClientClassName(String name) {
+        return "I" + name + "FeignClient";
+    }
     /**
      * 获取swagger属性默认值
      *

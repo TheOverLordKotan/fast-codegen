@@ -50,7 +50,7 @@ public class SqlToMetaProcessorMysqlImpl implements ISqlToMetaProcessor<MysqlCon
                             .stream()
                             .limit(1)
                             // 去掉 `
-                            .map(FormatUtils::snakeToLowerCamel)
+                            .map(FormatUtils::escapeQuotes)
                             .findFirst()
                             .orElseThrow(
                                     () -> new RuntimeException(String.format("当前表不存在主键:%s", table.getTableName())));

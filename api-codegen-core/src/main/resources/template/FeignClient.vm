@@ -1,36 +1,30 @@
 ## 包名
-package ${config.basePackage}.${config.controllerPackageName};
+package ${config.basePackage}.${config.feignClientPackageName};
 
 ## import 依赖
 #foreach($import in $controller.dtoImports)
 import $import;
 #end
 import ${config.basePackage}.${config.dtoPackageName}.*;
-import ${config.basePackage}.${config.servicePackageName}.${controller.serviceName};
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.stereotype.Controller;
+import org.springframework.cloud.openfeign.FeignClient;
 import java.util.List;
 
 /**
- * @ClassName ${controller.name}
+ * @InterfaceName FeignClient-${controller.feignClientName}
  * @Description ${controller.description}
- * @Author $controller.author
+ * @Author api-codegen
  **/
-@Controller
 @RequestMapping("${controller.basePath}")
 @Validated
-public class ${controller.name} {
+@FeignClient(name = "${config.applicationName}", url = "${config.applicationName}:${config.applicationServerPort}")
+public interface ${controller.feignClientName} {
 
-    private final ${controller.serviceName} service;
-
-    public ${controller.name}(${controller.serviceName} service) {
-        this.service = service;
-    }
 #if($controller.handlerMethods)
 #foreach($handlerMethod in $controller.handlerMethods)
 
@@ -65,19 +59,7 @@ public class ${controller.name} {
 #elseif($handlerMethodParam.tag == 1)##查询参数
 @Validated $handlerMethodParam.type ${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
-#end#end#end) {
-       #if($handlerMethod.handlerMethodReturn.isNotVoid()) return#end service.${handlerMethod.methodName}(#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
-#if($handlerMethodParam.tag == 3)##路径参数
-$handlerMethodParam.name#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
-                #end
-#elseif($handlerMethodParam.tag == 2)##请求体参数
-${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
-                #end
-#elseif($handlerMethodParam.tag == 1)##查询参数
-${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
-                #end
-#end#end);
-    }
+#end#end#end);
 #end
 #end
 

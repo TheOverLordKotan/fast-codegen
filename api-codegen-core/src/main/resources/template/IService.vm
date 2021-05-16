@@ -10,7 +10,8 @@ import java.util.List;
 
 /**
  * @InterfaceName ${controller.serviceName}
- * @Author $controller.author
+ * @Description ${controller.description}
+ * @Author api-codegen
  **/
 public interface ${controller.serviceName} {
 
@@ -18,15 +19,14 @@ public interface ${controller.serviceName} {
 #foreach($handlerMethod in $controller.handlerMethods)
 
     /**
-     * @summary $handlerMethod.summary
-     * @description $handlerMethod.description
+     * $handlerMethod.summary @Summary
+     * $handlerMethod.description @Description
      *
 #foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
      * @param ${handlerMethodParam.name} ${handlerMethodParam.description}
 #end
 ## 如果返回类型不为void，则需要增加描述
 #if($handlerMethod.handlerMethodReturn.isNotVoid())
-     *
      * @return ${handlerMethod.handlerMethodReturn.description}
      */
 #else

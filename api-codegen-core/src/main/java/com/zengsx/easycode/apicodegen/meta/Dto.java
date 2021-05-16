@@ -19,12 +19,6 @@ public class Dto {
      * 定义的名称
      */
     private String name;
-
-    /**
-     * 作者
-     */
-    private String author;
-
     /**
      * 描述
      */
@@ -32,19 +26,23 @@ public class Dto {
     /**
      * 属性
      */
-    private List<DtoFieldMeta> properties = new ArrayList<>();
+    private List<DtoField> properties = new ArrayList<>();
 
 
     /**
      * definition 属性
      */
     @Data
-    public static class DtoFieldMeta {
+    public static class DtoField {
 
         /**
-         * 属性类型名
+         * 类型
          */
         private String type;
+        /**
+         * 短类型
+         */
+        private String shortType;
         /**
          * 属性名
          */
@@ -61,6 +59,11 @@ public class Dto {
          * 对标 @NotNull
          */
         private boolean required;
+
+        /**
+         * 校验注解
+         */
+        private List<ValidateAnnotation> validateAnnotations;
 
         public String value() {
             if (ObjectUtils.isEmpty(value)) {

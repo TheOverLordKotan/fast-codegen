@@ -11,8 +11,18 @@ import lombok.Data;
 @Data
 public class HandlerMethodReturn {
 
+    /**
+     * 类型
+     */
     private String type;
+    /**
+     * 短类型
+     */
+    private String shortType;
 
+    /**
+     * 描述
+     */
     private String description;
 
     public boolean isNotVoid() {

@@ -1,7 +1,5 @@
 package com.zengsx.easycode.apicodegen.config;
 
-import java.io.File;
-import java.util.Optional;
 import lombok.Data;
 
 /**
@@ -12,6 +10,11 @@ import lombok.Data;
  */
 @Data
 public class GlobalConfig {
+
+    /**
+     * 生成类型（springmvc,feignClient）
+     */
+    private String generateType = "SpringMvc";
 
     /**
      * api定义类型,默认swagger
@@ -43,36 +46,17 @@ public class GlobalConfig {
     private String dtoPackageName = "dtos";
 
     /**
-     * @return controller生成路径
+     * feignClient包名
      */
-    public String getControllerPackagePath() {
-        return getBasePackagePath() + controllerPackageName + File.separator;
-    }
+    private String feignClientPackageName = "feignclients";
 
     /**
-     * @return service生成路径
+     * app名称
      */
-    public String getServicePackagePath() {
-        return getBasePackagePath() + servicePackageName + File.separator;
-    }
-
+    private String applicationName;
     /**
-     * @return dto生成路径
+     * app服务端口号
      */
-    public String getDtoPackagePath() {
-        return getBasePackagePath() + dtoPackageName + File.separator;
-    }
-
-    /**
-     * @return Application所在路径
-     */
-    public String getBasePackagePath() {
-        return srcJavaPath
-                + File.separator
-                + Optional.ofNullable(basePackage)
-                .orElse("")
-                .replace(".", File.separator)
-                + File.separator;
-    }
+    private Integer applicationServerPort;
 
 }
