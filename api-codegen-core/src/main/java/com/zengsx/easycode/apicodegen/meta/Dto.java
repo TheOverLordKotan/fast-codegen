@@ -7,7 +7,7 @@ import lombok.Data;
 import org.springframework.util.ObjectUtils;
 
 /**
- * @ClassName: DtoMeta
+ * @ClassName: Dto
  * @Description: dto定义
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 17:35
@@ -24,25 +24,24 @@ public class Dto {
      */
     private String description;
     /**
+     * 校验注解
+     */
+    private List<ValidateAnnotation> validateAnnotations;
+    /**
      * 属性
      */
-    private List<DtoField> properties = new ArrayList<>();
-
+    private List<Field> properties = new ArrayList<>();
 
     /**
      * definition 属性
      */
     @Data
-    public static class DtoField {
+    public static class Field {
 
         /**
          * 类型
          */
         private String type;
-        /**
-         * 短类型
-         */
-        private String shortType;
         /**
          * 属性名
          */
@@ -55,15 +54,16 @@ public class Dto {
          * 描述
          */
         private String description;
-        /**
-         * 对标 @NotNull
-         */
-        private boolean required;
 
         /**
          * 校验注解
          */
         private List<ValidateAnnotation> validateAnnotations;
+
+        /**
+         * 外部引入
+         */
+        private List<String> externalImport;
 
         public String value() {
             if (ObjectUtils.isEmpty(value)) {

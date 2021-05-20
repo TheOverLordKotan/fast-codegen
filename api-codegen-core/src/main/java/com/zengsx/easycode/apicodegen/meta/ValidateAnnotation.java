@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Data;
 
 /**
@@ -46,6 +47,15 @@ public class ValidateAnnotation {
         properties.add(property);
     }
 
+    @Override
+    public String toString() {
+        return "@" + annotationName + "(" +
+                properties.stream()
+                        .map(ValidateAnnotationProperty::toString)
+                        .collect(Collectors.joining(", "))
+                + ")";
+    }
+
     @Data
     static class ValidateAnnotationProperty {
 
@@ -56,6 +66,11 @@ public class ValidateAnnotation {
         private boolean enabledQuotes;
 
         // todo valueImport
+        @Override
+        public String toString() {
+            String format = enabledQuotes ? "%s = \"%s\"" : "%s = %s";
+            return String.format(format, name, value);
+        }
 
     }
 

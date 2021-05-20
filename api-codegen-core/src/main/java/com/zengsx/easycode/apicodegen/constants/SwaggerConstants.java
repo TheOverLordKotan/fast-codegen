@@ -20,5 +20,7 @@ public class SwaggerConstants {
 
     public static final String QUEUE_PARAM_DTO_SUFFIX = "QueryParam" + DTO_SUFFIX;
 
+    public static final String DEFINITION_REFERENCE_PREFIX = "#/definitions/";
+
 
 }

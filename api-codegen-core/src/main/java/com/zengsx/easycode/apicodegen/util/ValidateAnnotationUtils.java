@@ -10,11 +10,13 @@ import com.zengsx.easycode.apicodegen.meta.ValidateAnnotation;
  */
 public class ValidateAnnotationUtils {
 
-    public static ValidateAnnotation newNotNull(){
+    public static ValidateAnnotation required(){
         ValidateAnnotation annotation = new ValidateAnnotation();
         annotation.setAnnotationName("NotNull");
 
         return annotation;
     }
+
+
 
 }

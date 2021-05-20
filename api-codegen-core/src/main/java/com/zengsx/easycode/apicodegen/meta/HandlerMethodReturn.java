@@ -1,5 +1,6 @@
 package com.zengsx.easycode.apicodegen.meta;
 
+import java.util.List;
 import lombok.Data;
 
 /**
@@ -15,17 +16,18 @@ public class HandlerMethodReturn {
      * 类型
      */
     private String type;
-    /**
-     * 短类型
-     */
-    private String shortType;
 
     /**
      * 描述
      */
     private String description;
 
-    public boolean isNotVoid() {
+    /**
+     * 外部引入
+     */
+    private List<String> externalImport;
+
+    public boolean hasReturn() {
         return !"void".equals(type);
     }
 

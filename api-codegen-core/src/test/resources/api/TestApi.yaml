@@ -1,0 +1,182 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: 测试文件
+  contact:
+    name: Mr.Zeng
+basePath: /web-mgmt
+tags:
+  - name: TestApi
+    description: 测试使用
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  PageNum:
+    name: pageNum
+    in: query
+    description: 页数
+    required: true
+    type: integer
+    format: int32
+    default: 1
+  PageSize:
+    name: pageSize
+    in: query
+    description: 页面记录数
+    required: true
+    type: integer
+    format: int32
+    default: 25
+paths:
+  /v1/accounts:
+    get:
+      tags:
+        - TestApi
+      summary: 查询账号列表
+      description: 根据条件查询账号列表
+      operationId: listAccounts
+      parameters:
+        - name: name
+          in: query
+          description: 用户名称（模糊查找）
+          type: string
+        - name: phone
+          in: query
+          description: 用户手机号（模糊查找）
+          type: string
+        - name: email
+          in: query
+          description: 用户邮箱（模糊查找）
+          type: string
+        - $ref: '#/parameters/PageNum'
+        - $ref: '#/parameters/PageSize'
+      responses:
+        200:
+          description: 账号分页查询数据
+          schema:
+            $ref: '#/definitions/ListAccountsResult'
+    post:
+      tags:
+        - TestApi
+      summary: 添加账号
+      description: 新建账号
+      operationId: createAccount
+      parameters:
+        - name: data
+          in: body
+          description: 账号信息
+          schema:
+            $ref: '#/definitions/AccountDetails'
+          required: true
+      responses:
+        200:
+          description: Ok
+  /v1/accounts/{accountId}:
+    parameters:
+      - name: accountId
+        in: path
+        type: integer
+        format: int64
+        required: true
+        description: 账号id
+    get:
+      tags:
+        - TestApi
+      summary: 查询单个账号信息
+      description: 根据id查询账号
+      operationId: getAccount
+      responses:
+        200:
+          description: 账号信息
+          schema:
+            $ref: '#/definitions/AccountDetails'
+    delete:
+      tags:
+        - TestApi
+      summary: 删除单个账号
+      description: 根据id删除账号
+      operationId: deleteAccount
+      responses:
+        200:
+          description: ok
+    put:
+      tags:
+        - TestApi
+      summary: 全量更新账号信息
+      description: 根据id全量更新账号
+      operationId: updateAccount
+      parameters:
+        - name: data
+          in: body
+          description: 更新数据
+          required: true
+          schema:
+            $ref: '#/definitions/AccountDetails'
+      responses:
+        200:
+          description: ok
+
+definitions:
+  ListAccountsResult:
+    description: 账号分页数据
+    type: object
+    properties:
+      datas:
+        type: array
+        items:
+          $ref: '#/definitions/AccountDetails'
+      total:
+        description: 总数
+        type: integer
+        format: int64
+  AccountDetails:
+    description: 账号信息
+    type: object
+    properties:
+      idInt:
+        description: 账号id
+        type: integer
+        format: int32
+      idLong:
+        description: 账号id
+        type: integer
+        format: int64
+      id:
+        description: 账号id
+        type: integer
+        format: int64
+      username:
+        description: 用户名
+        type: string
+      password:
+        description: 密码
+        type: string
+      accountType:
+        description: 账号类型（1-内部员工，2-客户）
+        type: integer
+        format: int32
+      phone:
+        description: 手机号
+        type: string
+      email:
+        description: 邮箱
+        type: string
+      createdAt:
+        description: 创建时间
+        type: string
+        format: date
+      updatedAt:
+        description: 更新时间
+        type: string
+        format: date
+    required:
+      - username
+      - password
+      - accountType
+      - phone
+      - email

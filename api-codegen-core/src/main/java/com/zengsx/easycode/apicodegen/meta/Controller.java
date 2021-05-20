@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * @ClassName: ControllerMeta
+ * @ClassName: Controller
  * @Description: TODO
  * @Author: Mr.Zeng
  * @Date: 2021-04-19 15:15
@@ -46,5 +46,10 @@ public class Controller  {
      * 当前类包含的 请求方法
      */
     private List<HandlerMethod> handlerMethods;
+
+    /**
+     * 校验注解
+     */
+    private List<ValidateAnnotation> validateAnnotations;
 
 }

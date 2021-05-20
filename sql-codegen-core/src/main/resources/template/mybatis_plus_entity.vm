@@ -23,7 +23,7 @@ public class ${entity.className} {
     @TableField(value = "${column.columnName}"#if($column.isAutoFillWhenInsert), fill = FieldFill.INSERT#elseif($column.isAutoFillWhenUpdate), fill = FieldFill.UPDATE#elseif($column.isAutoFillWhenInsertOrUpdate), fill = FieldFill.INSERT_UPDATE#end)
 #end
 #if(${column.isLogicalDeleteField})
-    @TableLogic(value="${column.logicalNotDeletedValue}",delval="${column.logicalDeletedValue}")
+    @TableLogic(value = "${column.logicalNotDeletedValue}", delval = "${column.logicalDeletedValue}")
 #end
     private ${column.getTypeName()} ${column.fieldName};
 #end

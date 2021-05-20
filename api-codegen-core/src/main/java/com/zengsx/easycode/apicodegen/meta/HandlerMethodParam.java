@@ -5,13 +5,13 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * @ClassName: HandlerMethodParamMeta
+ * @ClassName: HandlerMethodParam
  * @Description: TODO
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 11:22
  */
 @Data
-public class HandlerMethodParam implements Importable {
+public class HandlerMethodParam{
 
     /**
      * 分类{@link HandlerMethodParamTag}
@@ -46,4 +46,9 @@ public class HandlerMethodParam implements Importable {
      * 校验注解
      */
     private List<ValidateAnnotation> validateAnnotations;
+
+    /**
+     * 外部引入
+     */
+    private List<String> externalImport;
 }

@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * @ClassName: RequestMapping
+ * @ClassName: HandlerMethod
  * @Description: TODO
  * @Author: Mr.Zeng
  * @Date: 2021-04-19 15:15
@@ -51,6 +51,11 @@ public class HandlerMethod  {
      * 返回数据类型
      */
     private HandlerMethodReturn handlerMethodReturn;
+
+    /**
+     * 校验注解
+     */
+    private List<ValidateAnnotation> validateAnnotations;
 
     /**
      * @return 是否开启json序列化
