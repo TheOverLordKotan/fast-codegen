@@ -1,7 +1,8 @@
 package com.zengsx.easycode.apicodegen.meta;
 
-import java.util.List;
+import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @ClassName: HandlerMethodReturnMeta
@@ -9,8 +10,9 @@ import lombok.Data;
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 17:34
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class HandlerMethodReturn {
+public class HandlerMethodReturn extends AbstractMeta {
 
     /**
      * 类型
@@ -21,11 +23,6 @@ public class HandlerMethodReturn {
      * 描述
      */
     private String description;
-
-    /**
-     * 外部引入
-     */
-    private List<String> externalImport;
 
     public boolean hasReturn() {
         return !"void".equals(type);

@@ -131,7 +131,7 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                     dto.setName(SwaggerUtils.getClassNameFromDefinitionName(definitionName));
                     dto.setDescription(modelImpl.getDescription());
                     Optional.ofNullable(modelImpl.getProperties()).ifPresent(properties -> {
-                        dto.setProperties(properties.entrySet().stream().map(entry -> {
+                        dto.setFields(properties.entrySet().stream().map(entry -> {
                                     Property property = entry.getValue();
                                     Field field = new Field();
                                     field.setName(entry.getKey());
@@ -283,7 +283,7 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
             Dto dto = new Dto();
             dto.setName(SwaggerUtils.getClassNameFromHandlerMethodName(opName));
             dto.setDescription(opName + "方法查询参数");
-            dto.setProperties(queryParameters.stream()
+            dto.setFields(queryParameters.stream()
                     .map(o -> {
                         Field field = new Field();
                         field.setRequired(o.getRequired());

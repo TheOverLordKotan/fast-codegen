@@ -1,7 +1,9 @@
 package com.zengsx.easycode.apicodegen.meta;
 
+import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
 import java.util.List;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @ClassName: HandlerMethod
@@ -9,25 +11,30 @@ import lombok.Data;
  * @Author: Mr.Zeng
  * @Date: 2021-04-19 15:15
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class HandlerMethod  {
+public class HandlerMethod extends AbstractMeta {
 
     /**
      * 请求类型  GET POST PUT PATCH DELETE
      */
     private String requestType;
+
     /**
      * 对应方法名
      */
     private String methodName;
+
     /**
      * 接口url
      */
     private String url;
+
     /**
      * 接口摘要
      */
     private String summary;
+
     /**
      * 接口描述
      */
@@ -37,6 +44,7 @@ public class HandlerMethod  {
      * 接收类型
      */
     private List<String> consumes;
+
     /**
      * 输出类型
      */
@@ -52,10 +60,14 @@ public class HandlerMethod  {
      */
     private HandlerMethodReturn handlerMethodReturn;
 
-    /**
-     * 校验注解
-     */
-    private List<ValidateAnnotation> validateAnnotations;
+    @Override
+    protected void processExternalImport() {
+        handlerMethodParams.stream()
+                .map(HandlerMethodParam::getExternalImports)
+                .flatMap(List::stream)
+                .forEach(this::addExternalImport);
+        handlerMethodReturn.getExternalImports().forEach(this::addExternalImport);
+    }
 
     /**
      * @return 是否开启json序列化

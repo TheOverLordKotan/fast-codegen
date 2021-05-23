@@ -1,7 +1,9 @@
 package com.zengsx.easycode.apicodegen.meta;
 
+import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
 import java.util.List;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @ClassName: Controller
@@ -9,8 +11,9 @@ import lombok.Data;
  * @Author: Mr.Zeng
  * @Date: 2021-04-19 15:15
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class Controller  {
+public class Controller extends AbstractMeta {
 
     /**
      * controller 名称
@@ -47,9 +50,11 @@ public class Controller  {
      */
     private List<HandlerMethod> handlerMethods;
 
-    /**
-     * 校验注解
-     */
-    private List<ValidateAnnotation> validateAnnotations;
-
+    @Override
+    protected void processExternalImport() {
+        handlerMethods.stream()
+                .map(HandlerMethod::getExternalImports)
+                .flatMap(List::stream)
+                .forEach(this::addExternalImport);
+    }
 }

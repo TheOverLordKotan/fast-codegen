@@ -1,8 +1,9 @@
 package com.zengsx.easycode.apicodegen.meta;
 
 import com.zengsx.easycode.apicodegen.constants.HandlerMethodParamTag;
-import java.util.List;
+import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @ClassName: HandlerMethodParam
@@ -10,8 +11,9 @@ import lombok.Data;
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 11:22
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class HandlerMethodParam{
+public class HandlerMethodParam extends AbstractMeta {
 
     /**
      * 分类{@link HandlerMethodParamTag}
@@ -22,11 +24,6 @@ public class HandlerMethodParam{
      * 类型
      */
     private String type;
-    /**
-     * 短类型
-     */
-    private String shortType;
-
     /**
      * 名称
      */
@@ -42,13 +39,4 @@ public class HandlerMethodParam{
      */
     private boolean required;
 
-    /**
-     * 校验注解
-     */
-    private List<ValidateAnnotation> validateAnnotations;
-
-    /**
-     * 外部引入
-     */
-    private List<String> externalImport;
 }

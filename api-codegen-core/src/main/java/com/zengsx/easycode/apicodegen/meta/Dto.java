@@ -1,9 +1,11 @@
 package com.zengsx.easycode.apicodegen.meta;
 
 import com.zengsx.easycode.apicodegen.constants.SwaggerConstants;
+import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -12,8 +14,9 @@ import org.springframework.util.ObjectUtils;
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 17:35
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class Dto {
+public class Dto extends AbstractMeta {
 
     /**
      * 定义的名称
@@ -23,20 +26,26 @@ public class Dto {
      * 描述
      */
     private String description;
-    /**
-     * 校验注解
-     */
-    private List<ValidateAnnotation> validateAnnotations;
+
     /**
      * 属性
      */
-    private List<Field> properties = new ArrayList<>();
+    private List<Field> fields = new ArrayList<>();
+
+    @Override
+    protected void processExternalImport() {
+        fields.stream()
+                .map(Field::getExternalImports)
+                .flatMap(List::stream)
+                .forEach(this::addExternalImport);
+    }
 
     /**
      * definition 属性
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
-    public static class Field {
+    public static class Field extends AbstractMeta {
 
         /**
          * 类型
@@ -54,16 +63,6 @@ public class Dto {
          * 描述
          */
         private String description;
-
-        /**
-         * 校验注解
-         */
-        private List<ValidateAnnotation> validateAnnotations;
-
-        /**
-         * 外部引入
-         */
-        private List<String> externalImport;
 
         public String value() {
             if (ObjectUtils.isEmpty(value)) {
