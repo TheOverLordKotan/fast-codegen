@@ -1,2 +1,17 @@
 /**/resources/**/*.java
 /**/*velocity*.log*
+/**/target/**
+/.idea/vcs.xml
+/maven-plugin-api-codegen/maven-plugin-api-codegen.iml
+/.idea/inspectionProfiles/Project_Default.xml
+/maven-plugin-sql-codegen/maven-plugin-sql-codegen.iml
+/.idea/ClojureProjectResolveSettings.xml
+/sql-codegen-core/sql-codegen-core.iml
+/common-utils/common-utils.iml
+/.idea/compiler.xml
+/parent.iml
+/.idea/.name
+/api-codegen-core/api-codegen-core.iml
+/.idea/uiDesigner.xml
+/maven-plugin-dependence-mgmt/maven-plugin-dependence-mgmt.iml
+/.idea/jarRepositories.xml
