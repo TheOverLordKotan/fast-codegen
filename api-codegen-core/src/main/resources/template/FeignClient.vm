@@ -2,7 +2,7 @@
 package ${config.basePackage}.${config.feignClientPackageName};
 
 ## import 依赖
-#foreach($import in $controller.dtoImports)
+#foreach($import in $controller.getExternalImports())
 import $import;
 #end
 import ${config.basePackage}.${config.dtoPackageName}.*;
@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.cloud.openfeign.FeignClient;
-import java.util.List;
-
 /**
  * @InterfaceName FeignClient-${controller.feignClientName}
  * @Description ${controller.description}
@@ -29,14 +27,16 @@ public interface ${controller.feignClientName} {
 #foreach($handlerMethod in $controller.handlerMethods)
 
     /**
+     * <pre>
      * $handlerMethod.summary @Summary
+     * </pre>
      * $handlerMethod.description @Description
      *
 #foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
      * @param ${handlerMethodParam.name} ${handlerMethodParam.description}
 #end
 ## 如果返回类型不为void，则需要增加描述
-#if($handlerMethod.handlerMethodReturn.isNotVoid())
+#if($handlerMethod.handlerMethodReturn.hasReturn())
      * @return ${handlerMethod.handlerMethodReturn.description}
      */
 #else

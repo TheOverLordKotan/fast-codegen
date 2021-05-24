@@ -2,8 +2,10 @@ package com.zengsx.easycode.apicodegen.meta;
 
 import com.zengsx.easycode.apicodegen.constants.SwaggerConstants;
 import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
+import com.zengsx.easycode.apicodegen.util.ValidateAnnotationUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.util.ObjectUtils;
@@ -38,6 +40,11 @@ public class Dto extends AbstractMeta {
                 .map(Field::getExternalImports)
                 .flatMap(List::stream)
                 .forEach(this::addExternalImport);
+        // 注解的import，内部使用
+        getValidateAnnotations().forEach(validateAnnotation -> {
+            Optional.ofNullable(validateAnnotation.getAnnotationImports())
+                    .ifPresent(imports -> imports.forEach(this::addExternalImport));
+        });
     }
 
     /**
@@ -64,25 +71,30 @@ public class Dto extends AbstractMeta {
          */
         private String description;
 
+        /**
+         * @return format 默认值
+         */
         public String value() {
             if (ObjectUtils.isEmpty(value)) {
                 return "";
             }
-            String newValue = "String".equals(type) ? "\"" + value + "\"" : value;
+            String newValue = String.class.getSimpleName().equals(type) ? "\"" + value + "\"" : value;
             newValue = " = " + newValue;
-            if ("Double".equals(type)) {
+            if (Double.class.getSimpleName().equals(type)) {
                 newValue = newValue + "D";
             }
-            if ("Long".equals(type)) {
+            if (Long.class.getSimpleName().equals(type)) {
                 newValue = newValue + "L";
             }
             return newValue;
         }
 
-        public boolean requiredValid() {
-            return type.contains("List") || type.contains(SwaggerConstants.DTO_SUFFIX);
+        @Override
+        protected void processValidateAnnotation() {
+            if (type.contains(List.class.getSimpleName()) || type.contains(SwaggerConstants.DTO_SUFFIX)) {
+                addValidateAnnotation(ValidateAnnotationUtils.Valid());
+            }
         }
-
     }
 
 }

@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Data;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @ClassName: ValidateAnnotation
@@ -24,7 +25,7 @@ public class ValidateAnnotation {
     /**
      * 注解import
      */
-    private String annotationImport;
+    private List<String> annotationImports;
 
     /**
      * 注解属性
@@ -34,21 +35,22 @@ public class ValidateAnnotation {
     /**
      * 添加属性
      *
-     * @param name  属性名
-     * @param value 属性值
+     * @param name          属性名
+     * @param value         属性值
+     * @param enabledQuotes 是否加引号
      */
-    public void addProperty(String name, Object value) {
-        Objects.requireNonNull(name, "name must not be bull");
+    public void addProperty(String name, String value, boolean enabledQuotes) {
         Objects.requireNonNull(value, "value  must not be bull");
-        ValidateAnnotationProperty property = new ValidateAnnotationProperty();
-        property.setName(name);
-        property.setValue(String.valueOf(value));
+        ValidateAnnotationProperty property = new ValidateAnnotationProperty(name, value, enabledQuotes);
         properties = Optional.ofNullable(properties).orElse(new ArrayList<>());
         properties.add(property);
     }
 
     @Override
     public String toString() {
+        if (ObjectUtils.isEmpty(properties)) {
+            return "@" + annotationName;
+        }
         return "@" + annotationName + "(" +
                 properties.stream()
                         .map(ValidateAnnotationProperty::toString)
@@ -65,9 +67,18 @@ public class ValidateAnnotation {
 
         private boolean enabledQuotes;
 
+        public ValidateAnnotationProperty(String name, String value, boolean enabledQuotes) {
+            this.name = name;
+            this.value = value;
+            this.enabledQuotes = enabledQuotes;
+        }
+
         // todo valueImport
         @Override
         public String toString() {
+            if (name == null || "".equals(name.trim())) {
+                return enabledQuotes ? "\"" + value + "\"" : value;
+            }
             String format = enabledQuotes ? "%s = \"%s\"" : "%s = %s";
             return String.format(format, name, value);
         }

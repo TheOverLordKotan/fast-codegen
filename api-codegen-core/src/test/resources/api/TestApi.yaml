@@ -76,6 +76,8 @@ paths:
       responses:
         200:
           description: Ok
+          schema:
+            type: string
   /v1/accounts/{accountId}:
     parameters:
       - name: accountId
@@ -103,7 +105,12 @@ paths:
       operationId: deleteAccount
       responses:
         200:
+          x-Import: com.java.CustomObject,com.test.Xyz
           description: ok
+          schema:
+            type: object
+            format: CustomObject
+
     put:
       tags:
         - TestApi
@@ -170,6 +177,9 @@ definitions:
         description: 创建时间
         type: string
         format: date
+        x-@Hello:
+          xx: xx
+          xy: xx
       updatedAt:
         description: 更新时间
         type: string

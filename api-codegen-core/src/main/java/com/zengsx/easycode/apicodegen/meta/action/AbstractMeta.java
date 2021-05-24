@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +32,12 @@ public abstract class AbstractMeta implements AnnotationSupport, Importable {
 
     @Override
     public final List<ValidateAnnotation> getValidateAnnotations() {
+        processValidateAnnotation();
         return validateAnnotations;
+    }
+
+    protected void processValidateAnnotation() {
+        // todo
     }
 
     @Override

@@ -10,7 +10,7 @@ import java.util.Optional;
  */
 public class TypeResolver {
 
-    public String getType(String importPath) {
+    public static String getType(String importPath) {
         String[] split = Optional.ofNullable(importPath).orElse("").split("\\.");
         return split.length > 0 ? split[split.length - 1] : null;
     }

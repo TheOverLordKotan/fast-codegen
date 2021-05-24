@@ -2,6 +2,7 @@ package com.zengsx.easycode.apicodegen.meta;
 
 import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
 import java.util.List;
+import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -62,11 +63,18 @@ public class HandlerMethod extends AbstractMeta {
 
     @Override
     protected void processExternalImport() {
+        // 参数
         handlerMethodParams.stream()
                 .map(HandlerMethodParam::getExternalImports)
                 .flatMap(List::stream)
                 .forEach(this::addExternalImport);
+        // 返回值
         handlerMethodReturn.getExternalImports().forEach(this::addExternalImport);
+        // 注解的import，内部使用
+        getValidateAnnotations().forEach(validateAnnotation -> {
+            Optional.ofNullable(validateAnnotation.getAnnotationImports())
+                    .ifPresent(imports -> imports.forEach(this::addExternalImport));
+        });
     }
 
     /**

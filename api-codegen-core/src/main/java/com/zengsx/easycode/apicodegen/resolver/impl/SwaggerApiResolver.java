@@ -1,8 +1,12 @@
 package com.zengsx.easycode.apicodegen.resolver.impl;
 
+import static com.zengsx.easycode.apicodegen.util.SwaggerUtils.getClassNameFromDefinitionName;
+import static com.zengsx.easycode.apicodegen.util.SwaggerUtils.getClassNameFromRefPath;
+import static com.zengsx.easycode.apicodegen.util.SwaggerUtils.getPropertyDefaultValue;
+
 import com.zengsx.easycode.apicodegen.constants.HandlerMethodParamTag;
 import com.zengsx.easycode.apicodegen.constants.SwaggerConstants;
-import com.zengsx.easycode.apicodegen.enums.Type;
+import com.zengsx.easycode.apicodegen.enums.TypeMapping;
 import com.zengsx.easycode.apicodegen.meta.ApiResolveResult;
 import com.zengsx.easycode.apicodegen.meta.Controller;
 import com.zengsx.easycode.apicodegen.meta.Dto;
@@ -12,6 +16,8 @@ import com.zengsx.easycode.apicodegen.meta.HandlerMethodParam;
 import com.zengsx.easycode.apicodegen.meta.HandlerMethodReturn;
 import com.zengsx.easycode.apicodegen.resolver.IApiResolver;
 import com.zengsx.easycode.apicodegen.util.SwaggerUtils;
+import com.zengsx.easycode.apicodegen.util.SwaggerVendorExtensionsUtil;
+import com.zengsx.easycode.apicodegen.util.TypeResolver;
 import com.zengsx.easycode.apicodegen.util.ValidateAnnotationUtils;
 import io.swagger.models.ArrayModel;
 import io.swagger.models.Model;
@@ -26,21 +32,13 @@ import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.BaseIntegerProperty;
-import io.swagger.models.properties.BooleanProperty;
-import io.swagger.models.properties.DateTimeProperty;
-import io.swagger.models.properties.DecimalProperty;
-import io.swagger.models.properties.DoubleProperty;
-import io.swagger.models.properties.FloatProperty;
-import io.swagger.models.properties.LongProperty;
-import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
-import io.swagger.models.properties.StringProperty;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -85,24 +83,40 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                 log.info("当前正在处理url:{},type:{}", url, opType.name());
                 // 获取对应的controllerMeta
                 Controller controller = controllerMetaMap.get(op.getTags().get(0));
+                SwaggerVendorExtensionsUtil
+                        .getImports(extParams)
+                        .forEach(controller::addExternalImport);
                 // 定义当前请求
-                HandlerMethod hMethodMeta = new HandlerMethod();
-                hMethodMeta.setUrl(url);
-                hMethodMeta.setRequestType(opType.name());
-                hMethodMeta.setMethodName(op.getOperationId());
-                hMethodMeta.setSummary(op.getSummary());
-                hMethodMeta.setDescription(op.getDescription());
-                hMethodMeta.setConsumes(Optional.ofNullable(op.getConsumes()).orElse(controller.getConsumes()));
-                hMethodMeta.setProduces(Optional.ofNullable(op.getProduces()).orElse(controller.getProduces()));
+                HandlerMethod handlerMethod = new HandlerMethod();
+                handlerMethod.setUrl(url);
+                handlerMethod.setRequestType(opType.name());
+                handlerMethod.setMethodName(op.getOperationId());
+                handlerMethod.setSummary(op.getSummary());
+                handlerMethod.setDescription(op.getDescription());
+                handlerMethod.setConsumes(Optional.ofNullable(op.getConsumes()).orElse(controller.getConsumes()));
+                handlerMethod.setProduces(Optional.ofNullable(op.getProduces()).orElse(controller.getProduces()));
                 // setting handlerMethod params
-                hMethodMeta.setHandlerMethodParams(getHandlerMethodParams(
+                handlerMethod.setHandlerMethodParams(getHandlerMethodParams(
                         op.getOperationId(),
                         op.getParameters(),
                         dtos));
                 // setting handlerMethod return def
-                hMethodMeta.setHandlerMethodReturn(getHandlerMethodReturn(op));
+                handlerMethod.setHandlerMethodReturn(getHandlerMethodReturn(op));
+
+                SwaggerVendorExtensionsUtil
+                        .getValidateAnnotations(extParams)
+                        .forEach(handlerMethod::addValidateAnnotation);
+
+                SwaggerVendorExtensionsUtil
+                        .getValidateAnnotations(op.getVendorExtensions())
+                        .forEach(handlerMethod::addValidateAnnotation);
+
+                SwaggerVendorExtensionsUtil
+                        .getImports(op.getVendorExtensions())
+                        .forEach(handlerMethod::addExternalImport);
+
                 // 收集 handlerMethod
-                controller.getHandlerMethods().add(hMethodMeta);
+                controller.getHandlerMethods().add(handlerMethod);
             });
 
         });
@@ -125,81 +139,99 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                     ModelImpl modelImpl = (ModelImpl) o.getValue();
                     // definition 只处理 type=object 的定义!
                     if (!SwaggerConstants.TYPE_OBJECT.equalsIgnoreCase(modelImpl.getType())) {
-                        throw new RuntimeException("definition 只处理 type=object 的定义!");
+                        log.error("definition 只处理 type=object 的定义，已跳过当前定义:{}!", definitionName);
+                        return null;
                     }
                     Dto dto = new Dto();
-                    dto.setName(SwaggerUtils.getClassNameFromDefinitionName(definitionName));
+                    dto.setName(getClassNameFromDefinitionName(definitionName));
                     dto.setDescription(modelImpl.getDescription());
-                    Optional.ofNullable(modelImpl.getProperties()).ifPresent(properties -> {
-                        dto.setFields(properties.entrySet().stream().map(entry -> {
-                                    Property property = entry.getValue();
-                                    Field field = new Field();
-                                    field.setName(entry.getKey());
-                                    field.setDescription(property.getDescription());
-                                    field.setValue(SwaggerUtils.getPropertyDefaultValue(property));
-                                    field.setValidateAnnotations(new ArrayList<>());
-                                    if (property.getRequired()) {
-                                        field.getValidateAnnotations().add(ValidateAnnotationUtils.required());
-                                    }
-                                    if (property instanceof ArrayProperty) {
-                                        // array 暂不支持默认值
-                                        Property itemType = ((ArrayProperty) property).getItems();
-                                        String subType;
-                                        if (itemType instanceof RefProperty) {
-                                            RefProperty refProperty = (RefProperty) itemType;
-                                            subType = SwaggerUtils
-                                                    .getClassNameFromRefPath(refProperty.getOriginalRef());
-                                        } else if (itemType instanceof ArrayProperty) {
-                                            throw new RuntimeException("目前只支持一级List,不支持多级");
-                                        } else if (itemType instanceof ObjectProperty) {
-                                            throw new RuntimeException("请单独定义对象，并通过 $ref 引用");
-                                        } else {
-                                            subType = SwaggerUtils
-                                                    .swaggerTypeToJavaType(itemType.getType(), itemType.getFormat());
-                                        }
-                                        field.setSsss(String.format("List<%s>", subType));
-                                    } else if (property instanceof LongProperty) {
-                                        field.setType(Type.LONG.getName());
-                                        field.setSsss(Type.LONG.getImport());
-                                    } else if (property instanceof BaseIntegerProperty) {
-                                        // 包含了 int32 的情况
-                                        field.setType(Type.INTEGER.getName());
-                                        field.setSsss(Type.INTEGER.getImport());
-                                    } else if (property instanceof BooleanProperty) {
-                                        field.setType(Type.BOOLEAN.getName());
-                                        field.setSsss(Type.BOOLEAN.getImport());
-                                    } else if (property instanceof DateTimeProperty) {
-                                        field.setType(Type.LOCAL_DATE_TIME.getName());
-                                        field.setSsss(Type.LOCAL_DATE_TIME.getImport());
-                                    } else if (property instanceof DoubleProperty) {
-                                        field.setType(Type.DOUBLE.getName());
-                                        field.setSsss(Type.DOUBLE.getImport());
-                                    } else if (property instanceof FloatProperty) {
-                                        field.setType(Type.FLOAT.getName());
-                                        field.setSsss(Type.FLOAT.getImport());
-                                    } else if (property instanceof DecimalProperty) {
-                                        field.setType(Type.DECIMAL.getName());
-                                        field.setSsss(Type.DECIMAL.getImport());
-                                    }
-//                                    else if (property instanceof FileProperty) {
-//
-//                                    }
-                                    else if (property instanceof RefProperty) {
-                                        RefProperty refProperty = (RefProperty) property;
-                                        field.setSsss(
-                                                SwaggerUtils.getClassNameFromRefPath(refProperty.getOriginalRef()));
-                                    } else if (property instanceof StringProperty) {
-                                        field.setType(Type.STRING.getName());
-                                        field.setSsss(Type.STRING.getImport());
-                                    } else {
-
-                                    }
-                                    return field;
-                                }).collect(Collectors.toList())
-                        );
-                    });
+                    dto.addValidateAnnotation(ValidateAnnotationUtils.data());
+                    dto.addValidateAnnotation(ValidateAnnotationUtils.jsonInclude());
+                    SwaggerVendorExtensionsUtil
+                            .getImports(modelImpl.getVendorExtensions())
+                            .forEach(dto::addExternalImport);
+                    SwaggerVendorExtensionsUtil
+                            .getValidateAnnotations(modelImpl.getVendorExtensions())
+                            .forEach(dto::addValidateAnnotation);
+                    Optional.ofNullable(modelImpl.getProperties()).ifPresent(properties -> dto.setFields(
+                            properties.entrySet()
+                                    .stream()
+                                    .map(entry -> propertyConvertDtoField(entry.getKey(), entry.getValue()))
+                                    .collect(Collectors.toList())
+                    ));
                     return dto;
-                }).collect(Collectors.toList());
+                }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+
+    /**
+     * definition property 转换为 dto field
+     *
+     * @param fieldName 字段名
+     * @param property  属性实体
+     * @return dto field 对象
+     */
+    private Field propertyConvertDtoField(String fieldName, Property property) {
+        Field field = new Field();
+        field.setName(fieldName);
+        field.setDescription(property.getDescription());
+        // 默认拿了 default 值,特殊类型下面在处理格式
+        field.setValue(getPropertyDefaultValue(property));
+        // 需要导入的class，需要指定  x-Import: xx.xx.xx,yy.yy.yy,zz.zz.zz
+        SwaggerVendorExtensionsUtil
+                .getImports(property.getVendorExtensions())
+                .forEach(field::addExternalImport);
+        SwaggerVendorExtensionsUtil
+                .getValidateAnnotations(property.getVendorExtensions())
+                .forEach(field::addValidateAnnotation);
+
+        if (property.getRequired()) {
+            field.addValidateAnnotation(ValidateAnnotationUtils.notNull());
+        }
+
+        if (property instanceof ArrayProperty) {
+            // array 暂不支持默认值
+            Field childField = propertyConvertDtoField("childField", ((ArrayProperty) property).getItems());
+            field.setType(String.format("%s<%s>", List.class.getSimpleName(), childField.getType()));
+            field.addExternalImport(List.class.getName());
+
+            field.addExternalImport(childField.getExternalImports().toArray(new String[]{}));
+
+        } else if (property instanceof RefProperty) {
+
+            RefProperty refProperty = (RefProperty) property;
+            String className = getClassNameFromRefPath(refProperty.getOriginalRef());
+            field.setType(className);
+
+        } else if (SwaggerConstants.TYPE_OBJECT.equalsIgnoreCase(property.getType())) {
+            if (null == property.getFormat()) {
+                // 没有配置 x-Type,则对应 java.lang.Object
+                field.setType(Object.class.getSimpleName());
+            } else if (Map.class.getSimpleName().equalsIgnoreCase(property.getFormat())) {
+                // x-Type:Map ,则对应 java.util.Map
+                String mapKeyType = Optional.ofNullable(property.getVendorExtensions().get("x-MapKeyType"))
+                        .map(Object::toString)
+                        .orElseThrow(() -> new RuntimeException("没有找到key对应的类型,fieldName:" + fieldName));
+                String mapValueType = Optional.ofNullable(property.getVendorExtensions().get("x-MapValueType"))
+                        .map(Object::toString)
+                        .orElseThrow(() -> new RuntimeException("没有找到value对应的类型,fieldName:" + fieldName));
+                field.setType(String.format(
+                        "%s<%s,%s>",
+                        Map.class.getSimpleName(),
+                        TypeResolver.getType(mapKeyType),
+                        TypeResolver.getType(mapValueType)
+                ));
+                field.addExternalImport(Map.class.getName());
+            } else {
+                // x-Type: xx ,则对应 xx
+                field.setType(property.getFormat());
+            }
+        } else {
+            TypeMapping mapping = TypeMapping.parse(property.getType(), property.getFormat());
+            field.setType(mapping.getType());
+            Optional.ofNullable(mapping.getExternalImport()).ifPresent(field::addExternalImport);
+        }
+        return field;
     }
 
     /**
@@ -242,13 +274,16 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                     HandlerMethodParam handlerMethodParam = new HandlerMethodParam();
                     handlerMethodParam.setName(parameter.getName());
                     handlerMethodParam.setDescription(parameter.getDescription());
-                    handlerMethodParam.setRequired(parameter.getRequired());
+                    if (parameter.getRequired()) {
+                        handlerMethodParam.addValidateAnnotation(ValidateAnnotationUtils.notNull());
+                    }
                     if (parameter instanceof PathParameter) {
                         PathParameter pathParameter = (PathParameter) parameter;
+                        TypeMapping mapping = TypeMapping.parse(pathParameter.getType(), pathParameter.getFormat());
                         // 只支持基本类型，直接获取type就行
-                        handlerMethodParam.setType(
-                                SwaggerUtils.swaggerTypeToJavaType(pathParameter.getType(), pathParameter.getFormat())
-                        );
+                        handlerMethodParam.setType(mapping.getType());
+                        Optional.ofNullable(mapping.getExternalImport())
+                                .ifPresent(handlerMethodParam::addExternalImport);
                         handlerMethodParam.setTag(HandlerMethodParamTag.PATH);
                     } else if (parameter instanceof BodyParameter) {
                         BodyParameter bodyParameter = ((BodyParameter) parameter);
@@ -264,52 +299,57 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                     }
                     return handlerMethodParam;
                 }).collect(Collectors.toList());
-
         List<QueryParameter> queryParameters = parameters.stream()
                 .filter(o -> o instanceof QueryParameter)
                 .map(o -> (QueryParameter) o)
                 .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(queryParameters)) {
-
             HandlerMethodParam handlerMethodParam = new HandlerMethodParam();
             handlerMethodParam.setTag(HandlerMethodParamTag.QUERY);
             handlerMethodParam.setName("queryParams");
             handlerMethodParam.setDescription("query参数,详情参考dto定义");
             handlerMethodParam.setType(SwaggerUtils.getClassNameFromHandlerMethodName(opName));
-
             // 追加到definition定义列表中
             handlerMethodParams.add(handlerMethodParam);
-
             Dto dto = new Dto();
             dto.setName(SwaggerUtils.getClassNameFromHandlerMethodName(opName));
             dto.setDescription(opName + "方法查询参数");
-            dto.setFields(queryParameters.stream()
-                    .map(o -> {
-                        Field field = new Field();
-                        field.setRequired(o.getRequired());
-                        field.setName(o.getName());
-                        // 默认值
-                        field.setValue(
-                                Optional.ofNullable(o.getDefaultValue())
-                                        .map(Object::toString)
-                                        .orElse(null)
-                        );
-                        field.setDescription(o.getDescription());
-                        if (SwaggerConstants.TYPE_ARRAY.equals(o.getType())) {
-                            if (null == o.getItems()) {
-                                throw new RuntimeException("QueryParam array类型参数应该具备子类型!");
-                            }
-                            if (o.getItems() instanceof RefProperty) {
-                                throw new RuntimeException("QueryParam 暂不支持 List<$ref> ");
-                            }
-                            String type = o.getItems().getType();
-                            String format = o.getItems().getFormat();
-                            field.setSsss(SwaggerUtils.swaggerTypeToJavaType(type, format));
-                        } else {
-                            field.setSsss(SwaggerUtils.swaggerTypeToJavaType(o.getType(), o.getFormat()));
-                        }
-                        return field;
-                    }).collect(Collectors.toList()));
+            dto.setFields(queryParameters.stream().map(queryParameter -> {
+                Field field = new Field();
+                if (queryParameter.getRequired()) {
+                    field.addValidateAnnotation(ValidateAnnotationUtils.notNull());
+                }
+                field.setName(queryParameter.getName());
+                // 默认值
+                field.setValue(Optional.ofNullable(queryParameter.getDefaultValue())
+                        .map(Object::toString)
+                        .orElse(null));
+                field.setDescription(queryParameter.getDescription());
+                SwaggerVendorExtensionsUtil.getValidateAnnotations(queryParameter.getVendorExtensions())
+                        .forEach(handlerMethodParam::addValidateAnnotation);
+                SwaggerVendorExtensionsUtil.getImports(queryParameter.getVendorExtensions())
+                        .forEach(handlerMethodParam::addExternalImport);
+                if (SwaggerConstants.TYPE_ARRAY.equals(queryParameter.getType())) {
+                    if (null == queryParameter.getItems()) {
+                        throw new RuntimeException("QueryParam array类型参数应该具备子类型!");
+                    }
+                    if (queryParameter.getItems() instanceof RefProperty) {
+                        throw new RuntimeException("QueryParam 暂不支持 List<$ref> ");
+                    }
+                    String type = queryParameter.getItems().getType();
+                    String format = queryParameter.getItems().getFormat();
+                    TypeMapping mapping = TypeMapping.parse(type, format);
+                    field.setType(String.format("%s<%s>", List.class.getSimpleName(), mapping.getType()));
+                    Optional.ofNullable(mapping.getExternalImport()).ifPresent(field::addExternalImport);
+                    field.addExternalImport(List.class.getName());
+                } else {
+                    TypeMapping mapping = TypeMapping
+                            .parse(queryParameter.getType(), queryParameter.getFormat());
+                    field.setType(mapping.getType());
+                    Optional.ofNullable(mapping.getExternalImport()).ifPresent(field::addExternalImport);
+                }
+                return field;
+            }).collect(Collectors.toList()));
 
             dtos.add(dto);
         }
@@ -328,31 +368,67 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("接口定义需要有一个唯一的返回声明!"));
         HandlerMethodReturn handlerMethodReturn = new HandlerMethodReturn();
+        handlerMethodReturn.setDescription(resp.getDescription());
         Model model = resp.getResponseSchema();
+        // 需要导入的class，需要指定  x-Import: xx.xx.xx,yy.yy.yy,zz.zz.zz
+        SwaggerVendorExtensionsUtil
+                .getImports(resp.getVendorExtensions())
+                .forEach(handlerMethodReturn::addExternalImport);
         if (null == model) {
             handlerMethodReturn.setType("void");
-            handlerMethodReturn.setCtype("void");
+        } else if (model instanceof RefModel) {
+            RefModel refModel = (RefModel) model;
+            handlerMethodReturn.setType(getClassNameFromRefPath(refModel.getOriginalRef()));
+        } else if (model instanceof ArrayModel) {
+            Property childProperty = ((ArrayModel) model).getItems();
+            String childType;
+            if (childProperty instanceof RefProperty) {
+                childType = getClassNameFromRefPath(((RefProperty) childProperty).getOriginalRef());
+            } else {
+                TypeMapping mapping = TypeMapping.parse(childProperty.getType(), childProperty.getFormat());
+                childType = mapping.getType();
+                Optional.ofNullable(mapping.getExternalImport()).ifPresent(handlerMethodReturn::addExternalImport);
+            }
+            handlerMethodReturn.setType(String.format("%s<%s>", List.class.getSimpleName(), childType));
+            handlerMethodReturn.addExternalImport(List.class.getName());
         } else if (model instanceof ModelImpl) {
             // 基础类型
             ModelImpl modelImpl = (ModelImpl) model;
-            handlerMethodReturn
-                    .setCtype(SwaggerUtils.swaggerTypeToJavaType(modelImpl.getType(), modelImpl.getFormat()));
-        } else if (model instanceof RefModel) {
-            RefModel refModel = (RefModel) model;
-            handlerMethodReturn.setCtype(SwaggerUtils.getClassNameFromRefPath(refModel.getOriginalRef()));
-        } else if (model instanceof ArrayModel) {
-            Property property = ((ArrayModel) model).getItems();
-            String subType;
-            if (property instanceof RefProperty) {
-                subType = SwaggerUtils.getClassNameFromRefPath(((RefProperty) property).getOriginalRef());
+            if (SwaggerConstants.TYPE_OBJECT.equalsIgnoreCase(modelImpl.getType())) {
+                if (null == modelImpl.getFormat()) {
+                    // 没有配置 x-Type,则对应 java.lang.Object
+                    handlerMethodReturn.setType(Object.class.getSimpleName());
+                } else if (Map.class.getSimpleName().equalsIgnoreCase(modelImpl.getFormat())) {
+                    // x-Type:Map ,则对应 java.util.Map
+                    String mapKeyType = Optional.ofNullable(modelImpl.getVendorExtensions().get("x-MapKeyType"))
+                            .map(Object::toString)
+                            .orElseThrow(() -> new RuntimeException(
+                                    "没有找到returnType对应的 x-MapKeyType 属性,OperationId:" + op.getOperationId()
+                            ));
+                    String mapValueType = Optional.ofNullable(modelImpl.getVendorExtensions().get("x-MapValueType"))
+                            .map(Object::toString)
+                            .orElseThrow(() -> new RuntimeException(
+                                    "没有找到returnType对应的 x-MapValueType 属性,OperationId:" + op.getOperationId()
+                            ));
+                    handlerMethodReturn.setType(String.format(
+                            "%s<%s,%s>",
+                            Map.class.getSimpleName(),
+                            TypeResolver.getType(mapKeyType),
+                            TypeResolver.getType(mapValueType)
+                    ));
+                    handlerMethodReturn.addExternalImport(Map.class.getName());
+                } else {
+                    // x-Type: xx ,则对应 xx
+                    handlerMethodReturn.setType(modelImpl.getFormat());
+                }
             } else {
-                subType = SwaggerUtils.swaggerTypeToJavaType(property.getType(), property.getFormat());
+                TypeMapping mapping = TypeMapping.parse(modelImpl.getType(), modelImpl.getFormat());
+                handlerMethodReturn.setType(mapping.getType());
+                Optional.ofNullable(mapping.getExternalImport()).ifPresent(handlerMethodReturn::addExternalImport);
             }
-            handlerMethodReturn.setCtype(String.format("List<%s>", subType));
         } else {
             throw new RuntimeException("resp返回值只支持 $ref | type | List<$ref> |List<type> ");
         }
-        handlerMethodReturn.setDescription(resp.getDescription());
         return handlerMethodReturn;
     }
 

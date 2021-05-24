@@ -21,7 +21,7 @@ public class ApiGenerateTest {
         config.setSrcJavaPath("src/test/resources/");
         config.setBasePackage("com.java.demo");
 
-        config.setGenerateType(GenerateType.FEIGN_CLIENT.getId());
+        config.setGenerateType(GenerateType.SPRING_MVC.getId());
         config.setApplicationName("FastCodegenApp");
         config.setApplicationServerPort(8080);
         new ApiCodegenRunner().start(config);

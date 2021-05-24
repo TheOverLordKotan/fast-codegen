@@ -1,36 +1,28 @@
-package ${config.basePackage}.dtos;
+package ${config.basePackage}.${config.dtoPackageName};
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import lombok.Data;
-import java.util.List;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import javax.validation.Valid;
+#foreach($import in $definition.getExternalImports())
+import $import;
+#end
 
 /**
  * @ClassName ${definition.name}
  * @Description ${definition.description}
  * @Author api-codegen
  **/
-@Data
-@JsonInclude(Include.NON_NULL)
+#foreach($annotation in $definition.getValidateAnnotations())
+${annotation.toString()}
+#end
 public class ${definition.name} {
 
-#foreach($property in $definition.properties)
+#foreach($field in $definition.fields)
 
     /**
-     * ${property.description}
+     * ${field.description}
      */
-#if($property.required)
-    @NotNull
+#foreach($annotation in $field.getValidateAnnotations())
+    ${annotation.toString()}
 #end
-#if($property.requiredValid())
-    @Valid
-#end
-    private ${property.type} ${property.name}$property.value();
+    private ${field.type} ${field.name}$field.value();
 #end
 
 }

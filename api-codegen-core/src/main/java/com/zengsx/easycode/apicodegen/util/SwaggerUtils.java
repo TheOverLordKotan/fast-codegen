@@ -22,36 +22,6 @@ public class SwaggerUtils {
         return new SwaggerParser().parse(content);
     }
 
-    /**
-     * 类型映射
-     */
-    private final static Map<String, String> TYPE_MAPPINGS = new HashMap<String, String>() {{
-        put("string", "String");
-        put("integer", "Integer");
-        put("integer@int32", "Integer");
-        put("integer@int64", "Long");
-        put("number", "Float");
-        put("number@float", "Float");
-        put("number@double", "Double");
-        put("boolean", "Boolean");
-    }};
-
-
-    /**
-     * 类型转换器  swagger to java type
-     *
-     * @param type   swagger 类型
-     * @param format swagger类型格式化
-     * @return java type name
-     */
-    public static String swaggerTypeToJavaType(String type, String format) {
-        String key = type + Optional.ofNullable(format).map(o -> "@" + o).orElse("");
-        if (TYPE_MAPPINGS.containsKey(key)) {
-            return TYPE_MAPPINGS.get(key);
-        }
-        throw new RuntimeException(String.format("Unknown or UnSupport Type:%s,Format:%s", type, format));
-    }
-
     public static String getClassNameFromHandlerMethodName(String handlerMethodName) {
         return FormatUtils.lowerCamelToUpperCamel(handlerMethodName) + SwaggerConstants.QUEUE_PARAM_DTO_SUFFIX;
     }
@@ -75,6 +45,7 @@ public class SwaggerUtils {
     public static String wrapFeignClientClassName(String name) {
         return "I" + name + "FeignClient";
     }
+
     /**
      * 获取swagger属性默认值
      *

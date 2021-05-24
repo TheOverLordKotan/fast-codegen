@@ -1,6 +1,7 @@
 package com.zengsx.easycode.apicodegen.meta;
 
 import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
+import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -28,4 +29,12 @@ public class HandlerMethodReturn extends AbstractMeta {
         return !"void".equals(type);
     }
 
+    @Override
+    protected void processExternalImport() {
+        // 注解的import，内部使用
+        getValidateAnnotations().forEach(validateAnnotation -> {
+            Optional.ofNullable(validateAnnotation.getAnnotationImports())
+                    .ifPresent(imports -> imports.forEach(this::addExternalImport));
+        });
+    }
 }
