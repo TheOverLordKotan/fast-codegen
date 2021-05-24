@@ -133,6 +133,12 @@ definitions:
     description: 账号分页数据
     type: object
     properties:
+      map:
+        description: 哈哈
+        type: object
+        x-format: map
+        x-MapKeyType: String
+        x-MapValueType: Double
       datas:
         type: array
         items:

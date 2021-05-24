@@ -5,6 +5,7 @@ import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
 import com.zengsx.easycode.apicodegen.util.ValidateAnnotationUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -91,7 +92,9 @@ public class Dto extends AbstractMeta {
 
         @Override
         protected void processValidateAnnotation() {
-            if (type.contains(List.class.getSimpleName()) || type.contains(SwaggerConstants.DTO_SUFFIX)) {
+            if (type.contains(List.class.getSimpleName())
+                    || type.contains(SwaggerConstants.DTO_SUFFIX)
+                    || type.contains(Map.class.getSimpleName())) {
                 addValidateAnnotation(ValidateAnnotationUtils.Valid());
             }
         }

@@ -204,10 +204,11 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
             field.setType(className);
 
         } else if (SwaggerConstants.TYPE_OBJECT.equalsIgnoreCase(property.getType())) {
-            if (null == property.getFormat()) {
+            String xFormat = SwaggerVendorExtensionsUtil.getXFormat(property.getVendorExtensions());
+            if (null == xFormat) {
                 // 没有配置 x-Type,则对应 java.lang.Object
                 field.setType(Object.class.getSimpleName());
-            } else if (Map.class.getSimpleName().equalsIgnoreCase(property.getFormat())) {
+            } else if (Map.class.getSimpleName().equalsIgnoreCase(xFormat)) {
                 // x-Type:Map ,则对应 java.util.Map
                 String mapKeyType = Optional.ofNullable(property.getVendorExtensions().get("x-MapKeyType"))
                         .map(Object::toString)
@@ -395,10 +396,11 @@ public class SwaggerApiResolver implements IApiResolver<Swagger> {
             // 基础类型
             ModelImpl modelImpl = (ModelImpl) model;
             if (SwaggerConstants.TYPE_OBJECT.equalsIgnoreCase(modelImpl.getType())) {
-                if (null == modelImpl.getFormat()) {
+                String xFormat = SwaggerVendorExtensionsUtil.getXFormat(modelImpl.getVendorExtensions());
+                if (null == xFormat) {
                     // 没有配置 x-Type,则对应 java.lang.Object
                     handlerMethodReturn.setType(Object.class.getSimpleName());
-                } else if (Map.class.getSimpleName().equalsIgnoreCase(modelImpl.getFormat())) {
+                } else if (Map.class.getSimpleName().equalsIgnoreCase(xFormat)) {
                     // x-Type:Map ,则对应 java.util.Map
                     String mapKeyType = Optional.ofNullable(modelImpl.getVendorExtensions().get("x-MapKeyType"))
                             .map(Object::toString)

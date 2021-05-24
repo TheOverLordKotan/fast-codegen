@@ -10,6 +10,14 @@ import java.util.stream.Collectors;
 public class SwaggerVendorExtensionsUtil {
 
 
+    public static String getXFormat(Map<String, Object> vendorExtensions){
+        return Optional.ofNullable(vendorExtensions)
+                .map(map->map.get("x-format"))
+                .map(Object::toString)
+                .orElse(null);
+    }
+
+
     public static List<String> getImports(Map<String, Object> vendorExtensions) {
         return Arrays.asList(Optional.ofNullable(vendorExtensions)
                 .map(map -> map.get("x-Import"))
