@@ -105,11 +105,11 @@ paths:
       operationId: deleteAccount
       responses:
         200:
-          x-Import: com.java.CustomObject,com.test.Xyz
           description: ok
           schema:
             type: object
-            format: CustomObject
+            x-format: CustomObject
+            x-import: com.java.CustomObject
 
     put:
       tags:
@@ -127,6 +127,10 @@ paths:
       responses:
         200:
           description: ok
+          schema:
+            type: object
+            x-format: Map<String,String>
+            x-import: java.util.Map
 
 definitions:
   ListAccountsResult:

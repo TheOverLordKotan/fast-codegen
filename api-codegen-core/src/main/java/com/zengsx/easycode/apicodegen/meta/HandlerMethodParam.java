@@ -1,10 +1,8 @@
 package com.zengsx.easycode.apicodegen.meta;
 
 import com.zengsx.easycode.apicodegen.constants.HandlerMethodParamTag;
-import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
-import java.util.Optional;
+import com.zengsx.easycode.apicodegen.holders.DataHolder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * @ClassName: HandlerMethodParam
@@ -12,9 +10,8 @@ import lombok.EqualsAndHashCode;
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 11:22
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class HandlerMethodParam extends AbstractMeta {
+public class HandlerMethodParam {
 
     /**
      * 分类{@link HandlerMethodParamTag}
@@ -35,12 +32,13 @@ public class HandlerMethodParam extends AbstractMeta {
      */
     private String description;
 
-    @Override
-    protected void processExternalImport() {
-        // 注解的import，内部使用
-        getValidateAnnotations().forEach(validateAnnotation -> {
-            Optional.ofNullable(validateAnnotation.getAnnotationImports())
-                    .ifPresent(imports -> imports.forEach(this::addExternalImport));
-        });
-    }
+    /**
+     * import holder
+     */
+    private final DataHolder<String> externalImportHolder = new DataHolder<>();
+    /**
+     * annotation holder
+     */
+    private final DataHolder<ValidateAnnotation> validateAnnotationHolder = new DataHolder<>();
+
 }

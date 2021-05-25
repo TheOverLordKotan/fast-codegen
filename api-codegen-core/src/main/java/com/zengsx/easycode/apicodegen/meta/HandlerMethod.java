@@ -1,10 +1,10 @@
 package com.zengsx.easycode.apicodegen.meta;
 
-import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
+import com.zengsx.easycode.apicodegen.holders.DataHolder;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * @ClassName: HandlerMethod
@@ -12,9 +12,8 @@ import lombok.EqualsAndHashCode;
  * @Author: Mr.Zeng
  * @Date: 2021-04-19 15:15
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class HandlerMethod extends AbstractMeta {
+public class HandlerMethod implements Importable {
 
     /**
      * 请求类型  GET POST PUT PATCH DELETE
@@ -61,21 +60,14 @@ public class HandlerMethod extends AbstractMeta {
      */
     private HandlerMethodReturn handlerMethodReturn;
 
-    @Override
-    protected void processExternalImport() {
-        // 参数
-        handlerMethodParams.stream()
-                .map(HandlerMethodParam::getExternalImports)
-                .flatMap(List::stream)
-                .forEach(this::addExternalImport);
-        // 返回值
-        handlerMethodReturn.getExternalImports().forEach(this::addExternalImport);
-        // 注解的import，内部使用
-        getValidateAnnotations().forEach(validateAnnotation -> {
-            Optional.ofNullable(validateAnnotation.getAnnotationImports())
-                    .ifPresent(imports -> imports.forEach(this::addExternalImport));
-        });
-    }
+    /**
+     * import holder
+     */
+    private final DataHolder<String> externalImportHolder = new DataHolder<>();
+    /**
+     * annotation holder
+     */
+    private final DataHolder<ValidateAnnotation> validateAnnotationHolder = new DataHolder<>();
 
     /**
      * @return 是否开启json序列化
@@ -91,4 +83,13 @@ public class HandlerMethod extends AbstractMeta {
         return consumes.stream().anyMatch(o -> o.contains("json"));
     }
 
+    @Override
+    public List<String> getExternalImports() {
+        List<String> externalImports = new ArrayList<>(externalImportHolder.get());
+        handlerMethodParams.forEach(param -> externalImports.addAll(param.getExternalImportHolder().get()));
+        externalImports.addAll(handlerMethodReturn.getExternalImportHolder().get());
+        validateAnnotationHolder.get()
+                .forEach(annotation -> externalImports.addAll(annotation.getExternalImportHolder().get()));
+        return externalImports.stream().distinct().collect(Collectors.toList());
+    }
 }

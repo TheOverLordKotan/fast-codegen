@@ -1,14 +1,13 @@
 package com.zengsx.easycode.apicodegen.meta;
 
 import com.zengsx.easycode.apicodegen.constants.SwaggerConstants;
-import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
+import com.zengsx.easycode.apicodegen.holders.DataHolder;
 import com.zengsx.easycode.apicodegen.util.ValidateAnnotationUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -17,9 +16,8 @@ import org.springframework.util.ObjectUtils;
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 17:35
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class Dto extends AbstractMeta {
+public class Dto implements Importable {
 
     /**
      * 定义的名称
@@ -31,29 +29,38 @@ public class Dto extends AbstractMeta {
     private String description;
 
     /**
+     * import holder
+     */
+    private final DataHolder<String> externalImportHolder = new DataHolder<>();
+
+    /**
+     * annotation holder
+     */
+    private final DataHolder<ValidateAnnotation> validateAnnotationHolder = new DataHolder<>();
+
+    /**
      * 属性
      */
     private List<Field> fields = new ArrayList<>();
 
     @Override
-    protected void processExternalImport() {
-        fields.stream()
-                .map(Field::getExternalImports)
-                .flatMap(List::stream)
-                .forEach(this::addExternalImport);
-        // 注解的import，内部使用
-        getValidateAnnotations().forEach(validateAnnotation -> {
-            Optional.ofNullable(validateAnnotation.getAnnotationImports())
-                    .ifPresent(imports -> imports.forEach(this::addExternalImport));
+    public List<String> getExternalImports() {
+        List<String> externalImports = new ArrayList<>(externalImportHolder.get());
+        fields.forEach(field -> {
+            externalImports.addAll(field.getExternalImportHolder().get());
+            field.getValidateAnnotationHolder().get()
+                    .forEach(annotation -> externalImports.addAll(annotation.getExternalImportHolder().get()));
         });
+        validateAnnotationHolder.get()
+                .forEach(annotation -> externalImports.addAll(annotation.getExternalImportHolder().get()));
+        return externalImports.stream().distinct().collect(Collectors.toList());
     }
 
     /**
      * definition 属性
      */
-    @EqualsAndHashCode(callSuper = true)
     @Data
-    public static class Field extends AbstractMeta {
+    public static class Field {
 
         /**
          * 类型
@@ -73,6 +80,16 @@ public class Dto extends AbstractMeta {
         private String description;
 
         /**
+         * import holder
+         */
+        private final DataHolder<String> externalImportHolder = new DataHolder<>();
+
+        /**
+         * annotation holder
+         */
+        private final DataHolder<ValidateAnnotation> validateAnnotationHolder = new DataHolder<>();
+
+        /**
          * @return format 默认值
          */
         public String value() {
@@ -90,14 +107,15 @@ public class Dto extends AbstractMeta {
             return newValue;
         }
 
-        @Override
-        protected void processValidateAnnotation() {
+        public void setType(String type) {
+            this.type = type;
             if (type.contains(List.class.getSimpleName())
                     || type.contains(SwaggerConstants.DTO_SUFFIX)
                     || type.contains(Map.class.getSimpleName())) {
-                addValidateAnnotation(ValidateAnnotationUtils.Valid());
+                validateAnnotationHolder.addItem(ValidateAnnotationUtils.valid());
             }
         }
+
     }
 
 }

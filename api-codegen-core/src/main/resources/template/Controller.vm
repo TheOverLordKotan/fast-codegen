@@ -2,7 +2,7 @@
 package ${config.basePackage}.${config.controllerPackageName};
 
 ## import 依赖
-#foreach($import in $controller.getExternalImports())
+#foreach($import in $controller.getExternalImportsWithFilter())
 import $import;
 #end
 import ${config.basePackage}.${config.dtoPackageName}.*;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Controller;
 /**
  * @ClassName ${controller.name}
  * @Description ${controller.description}
- * @Author $controller.author
+ * @Author api-codegen
  **/
 @Controller
 @RequestMapping("${controller.basePath}")
@@ -49,7 +49,7 @@ public class ${controller.name} {
 #else
      */
 #end
-#foreach($annotation in $handlerMethod.getValidateAnnotations())
+#foreach($annotation in $handlerMethod.getValidateAnnotationHolder().get())
     ${annotation.toString()}
 #end
 #if($handlerMethod.enableResponseBody())
@@ -70,7 +70,7 @@ public class ${controller.name} {
 @Validated $handlerMethodParam.type ${handlerMethodParam.name}#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
             #end
 #end#end#end) {
-       #if($handlerMethod.handlerMethodReturn.isNotVoid()) return#end service.${handlerMethod.methodName}(#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
+       #if($handlerMethod.handlerMethodReturn.hasReturn()) return#end service.${handlerMethod.methodName}(#foreach($handlerMethodParam in $handlerMethod.handlerMethodParams)
 #if($handlerMethodParam.tag == 3)##路径参数
 $handlerMethodParam.name#if($velocityCount<$handlerMethod.handlerMethodParams.size()),
                 #end

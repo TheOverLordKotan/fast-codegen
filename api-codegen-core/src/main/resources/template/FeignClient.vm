@@ -2,7 +2,7 @@
 package ${config.basePackage}.${config.feignClientPackageName};
 
 ## import 依赖
-#foreach($import in $controller.getExternalImports())
+#foreach($import in $controller.getExternalImportsWithFilter())
 import $import;
 #end
 import ${config.basePackage}.${config.dtoPackageName}.*;

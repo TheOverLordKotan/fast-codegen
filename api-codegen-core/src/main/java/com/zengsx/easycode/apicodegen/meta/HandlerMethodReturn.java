@@ -1,19 +1,16 @@
 package com.zengsx.easycode.apicodegen.meta;
 
-import com.zengsx.easycode.apicodegen.meta.action.AbstractMeta;
-import java.util.Optional;
+import com.zengsx.easycode.apicodegen.holders.DataHolder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
- * @ClassName: HandlerMethodReturnMeta
+ * @ClassName: HandlerMethodReturn
  * @Description: TODO
  * @Author: Mr.Zeng
  * @Date: 2021-04-23 17:34
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class HandlerMethodReturn extends AbstractMeta {
+public class HandlerMethodReturn {
 
     /**
      * 类型
@@ -25,16 +22,20 @@ public class HandlerMethodReturn extends AbstractMeta {
      */
     private String description;
 
+    /**
+     * @return 是否有返回值
+     */
     public boolean hasReturn() {
-        return !"void".equals(type);
+        return !void.class.getSimpleName().equals(type);
     }
 
-    @Override
-    protected void processExternalImport() {
-        // 注解的import，内部使用
-        getValidateAnnotations().forEach(validateAnnotation -> {
-            Optional.ofNullable(validateAnnotation.getAnnotationImports())
-                    .ifPresent(imports -> imports.forEach(this::addExternalImport));
-        });
-    }
+    /**
+     * import holder
+     */
+    private final DataHolder<String> externalImportHolder = new DataHolder<>();
+    /**
+     * annotation holder
+     */
+    private final DataHolder<ValidateAnnotation> validateAnnotationHolder = new DataHolder<>();
+
 }

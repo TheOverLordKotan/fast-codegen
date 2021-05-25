@@ -1,6 +1,6 @@
 package ${config.basePackage}.${config.dtoPackageName};
 
-#foreach($import in $definition.getExternalImports())
+#foreach($import in $definition.getExternalImportsWithFilter())
 import $import;
 #end
 
@@ -9,7 +9,7 @@ import $import;
  * @Description ${definition.description}
  * @Author api-codegen
  **/
-#foreach($annotation in $definition.getValidateAnnotations())
+#foreach($annotation in $definition.getValidateAnnotationHolder().get())
 ${annotation.toString()}
 #end
 public class ${definition.name} {
@@ -19,7 +19,7 @@ public class ${definition.name} {
     /**
      * ${field.description}
      */
-#foreach($annotation in $field.getValidateAnnotations())
+#foreach($annotation in $field.getValidateAnnotationHolder().get())
     ${annotation.toString()}
 #end
     private ${field.type} ${field.name}$field.value();

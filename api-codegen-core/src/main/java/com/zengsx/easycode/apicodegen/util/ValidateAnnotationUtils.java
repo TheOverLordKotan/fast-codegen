@@ -14,14 +14,14 @@ public class ValidateAnnotationUtils {
     public static ValidateAnnotation notNull() {
         ValidateAnnotation annotation = new ValidateAnnotation();
         annotation.setAnnotationName("NotNull");
-        annotation.setAnnotationImports(Arrays.asList("javax.validation.constraints.NotNull"));
+        annotation.getExternalImportHolder().addItem("javax.validation.constraints.NotNull");
         return annotation;
     }
 
     public static ValidateAnnotation data() {
         ValidateAnnotation annotation = new ValidateAnnotation();
         annotation.setAnnotationName("Data");
-        annotation.setAnnotationImports(Arrays.asList("lombok.Data"));
+        annotation.getExternalImportHolder().addItem("lombok.Data");
         return annotation;
     }
 
@@ -29,7 +29,7 @@ public class ValidateAnnotationUtils {
     public static ValidateAnnotation jsonInclude() {
         ValidateAnnotation annotation = new ValidateAnnotation();
         annotation.setAnnotationName("JsonInclude");
-        annotation.setAnnotationImports(Arrays.asList(
+        annotation.getExternalImportHolder().addItem(Arrays.asList(
                 "com.fasterxml.jackson.annotation.JsonInclude",
                 "com.fasterxml.jackson.annotation.JsonInclude.Include"
         ));
@@ -37,10 +37,10 @@ public class ValidateAnnotationUtils {
         return annotation;
     }
 
-    public static ValidateAnnotation Valid() {
+    public static ValidateAnnotation valid() {
         ValidateAnnotation annotation = new ValidateAnnotation();
         annotation.setAnnotationName("Valid");
-        annotation.setAnnotationImports(Arrays.asList("javax.validation.Valid"));
+        annotation.getExternalImportHolder().addItem("javax.validation.Valid");
         return annotation;
     }
 

@@ -1,5 +1,6 @@
 package com.zengsx.easycode.apicodegen.meta;
 
+import com.zengsx.easycode.apicodegen.holders.DataHolder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -23,9 +24,9 @@ public class ValidateAnnotation {
     private String annotationName;
 
     /**
-     * 注解import
+     * import holder
      */
-    private List<String> annotationImports;
+    private final DataHolder<String> externalImportHolder = new DataHolder<>();
 
     /**
      * 注解属性
